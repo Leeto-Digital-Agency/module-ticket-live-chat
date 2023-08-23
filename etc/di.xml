@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+	<preference for="Leeto\TicketLiveChat\Api\TicketRepositoryInterface" type="Leeto\TicketLiveChat\Model\TicketRepository"/>
+	<preference for="Leeto\TicketLiveChat\Api\Data\TicketInterface" type="Leeto\TicketLiveChat\Model\Data\Ticket"/>
+	<preference for="Leeto\TicketLiveChat\Api\Data\TicketSearchResultsInterface" type="Magento\Framework\Api\SearchResults"/>
+	<preference for="Leeto\TicketLiveChat\Api\TicketStatusRepositoryInterface" type="Leeto\TicketLiveChat\Model\TicketStatusRepository"/>
+	<preference for="Leeto\TicketLiveChat\Api\Data\TicketStatusInterface" type="Leeto\TicketLiveChat\Model\TicketStatus"/>
+	<preference for="Leeto\TicketLiveChat\Api\Data\TicketStatusSearchResultsInterface" type="Magento\Framework\Api\SearchResults"/>
+	<preference for="Leeto\TicketLiveChat\Api\TicketTypeRepositoryInterface" type="Leeto\TicketLiveChat\Model\TicketTypeRepository"/>
+	<preference for="Leeto\TicketLiveChat\Api\Data\TicketTypeInterface" type="Leeto\TicketLiveChat\Model\TicketType"/>
+	<preference for="Leeto\TicketLiveChat\Api\Data\TicketTypeSearchResultsInterface" type="Magento\Framework\Api\SearchResults"/>
+	<preference for="Leeto\TicketLiveChat\Api\ChatRepositoryInterface" type="Leeto\TicketLiveChat\Model\ChatRepository"/>
+	<preference for="Leeto\TicketLiveChat\Api\Data\ChatInterface" type="Leeto\TicketLiveChat\Model\Chat"/>
+	<preference for="Leeto\TicketLiveChat\Api\Data\ChatSearchResultsInterface" type="Magento\Framework\Api\SearchResults"/>
+	<preference for="Leeto\TicketLiveChat\Api\ChatStatusRepositoryInterface" type="Leeto\TicketLiveChat\Model\ChatStatusRepository"/>
+	<preference for="Leeto\TicketLiveChat\Api\Data\ChatStatusInterface" type="Leeto\TicketLiveChat\Model\ChatStatus"/>
+	<preference for="Leeto\TicketLiveChat\Api\Data\ChatStatusSearchResultsInterface" type="Magento\Framework\Api\SearchResults"/>
+	<preference for="Leeto\TicketLiveChat\Api\ChatMessageRepositoryInterface" type="Leeto\TicketLiveChat\Model\ChatMessageRepository"/>
+	<preference for="Leeto\TicketLiveChat\Api\Data\ChatMessageInterface" type="Leeto\TicketLiveChat\Model\ChatMessage"/>
+	<preference for="Leeto\TicketLiveChat\Api\Data\ChatMessageSearchResultsInterface" type="Magento\Framework\Api\SearchResults"/>
+	<preference for="Leeto\TicketLiveChat\Api\AttachmentRepositoryInterface" type="Leeto\TicketLiveChat\Model\AttachmentRepository"/>
+	<preference for="Leeto\TicketLiveChat\Api\Data\AttachmentInterface" type="Leeto\TicketLiveChat\Model\Attachment"/>
+	<preference for="Leeto\TicketLiveChat\Api\Data\AttachmentSearchResultsInterface" type="Magento\Framework\Api\SearchResults"/>
+</config>

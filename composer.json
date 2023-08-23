@@ -1,0 +1,21 @@
+{
+    "name": "leeto/module-ticketlivechat",
+    "description": "Leeto",
+    "type": "magento2-module",
+    "license": "GPL-3.0",
+    "authors": [
+        {
+            "name": "Leeto"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {},
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Leeto\\TicketLiveChat\\": ""
+        }
+    }
+}
