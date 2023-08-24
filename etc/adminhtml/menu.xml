@@ -6,20 +6,20 @@
             title="Leeto"
             module="Leeto_TicketLiveChat"
             sortOrder="1"
-            action="leeto_ticketlivechat/ticket/index"
+            action="leeto_support/ticket/index"
             resource="Magento_Backend::content"/>
         <add id="Leeto_TicketLiveChat::leeto_tickets"
             title="Tickets"
             module="Leeto_TicketLiveChat"
             sortOrder="5"
             parent="Leeto_TicketLiveChat::leeto_menu"
-            action="leeto_ticketlivechat/ticket/index"
+            action="leeto_support/ticket/index"
             resource="Magento_Backend::content"/>
         <add id="Leeto_TicketLiveChat::leeto_chat"
             title="Live Chat"
             module="Leeto_TicketLiveChat"
             sortOrder="10"
-            action="leeto_ticketlivechat/chat/index"
+            action="leeto_support/chat/index"
             parent="Leeto_TicketLiveChat::leeto_menu"
             resource="Magento_Backend::content"/>
     </menu>
