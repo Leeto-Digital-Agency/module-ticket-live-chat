@@ -1,0 +1,146 @@
+<div id="chat-container">
+    <button class="chat-button">
+        <div class="chat-button-wrapper">
+            <span>
+                <svg width="26px" height="26px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 10.5H16" stroke="white" stroke-width="1.5" stroke-linecap="round"></path>
+                    <path d="M8 14H13.5" stroke="white" stroke-width="1.5" stroke-linecap="round"></path>
+                    <path d="M17 3.33782
+                        C15.5291 2.48697 13.8214 2 12 2
+                        C6.47715 2 2 6.47715 2 12
+                        C2 13.5997 2.37562 15.1116 3.04346 16.4525
+                        C3.22094 16.8088 3.28001 17.2161 3.17712 17.6006
+                        L2.58151 19.8267
+                        C2.32295 20.793 3.20701 21.677 4.17335 21.4185
+                        L6.39939 20.8229
+                        C6.78393 20.72 7.19121 20.7791 7.54753 20.9565
+                        C8.88837 21.6244 10.4003 22 12 22
+                        C17.5228 22 22 17.5228 22 12
+                        C22 10.1786 21.513 8.47087 20.6622 7"
+                    stroke="white"
+                    stroke-width="1.5"
+                    stroke-linecap="round"></path>
+                </svg>
+            </span>
+            <span><?= $escaper->escapeHtml(__('Chat now')) ?></span>
+        </div>
+    </button>
+    <div class="chat-popup">
+        <div class="chat-header">
+            <div class="welcome-message-wrapper">
+                <div class="welcome-message">
+                    <?= $escaper->escapeHtml(__('Welcome to the Chat')) ?> 
+                </div>
+                <button class="close-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="admin-status">
+                <span class="dot"></span>
+                <span class="admin-name"><?= $escaper->escapeHtml(__('Support is available')) ?></span>
+            </div>
+        </div>
+        <div class="email-input-section">
+            <label for="email-input">
+                <?= $escaper->escapeHtml(__('Please enter your email address to start the chat')) ?>
+            </label>
+            <input type="email" class="required" id="email-input" placeholder="<?= $escaper->escapeHtml(__('Enter your email')) ?>">
+            <span id="email-error-message" style="display: none;"></span>
+            <button id="continue-button"><?= $escaper->escapeHtml(__('Continue')) ?></button>
+        </div>
+        <div class="chat-wrapper">
+            <div class="chat-messages">
+                <div class="message support-message">
+                    <div class="support-message-header">
+                        <img class="support-message-avatar" src="https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png">
+                        <span class="support-message-name"><?= $escaper->escapeHtml(__('Support')) ?></span>
+                    </div>
+                    <div class="support-message-content">
+                        <div class="text"><?= $escaper->escapeHtml(__('Hi! How can we assist you?')) ?></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="chat-input">
+            <div class="input-wrapper">
+                <textarea name="" id="" placeholder="<?=  $escaper->escapeHtml(__('Type your message...')) ?>"></textarea>
+                <button class="send-icon">
+                <svg width="28px" height="28px" viewBox="0 0 24.00 24.00" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#CCCCCC" stroke-width="0.048"></g>
+                    <g id="SVGRepo_iconCarrier">
+                    <path d="M11.5003 12H5.41872
+                            M5.24634 12.7972L4.24158 15.7986
+                            C3.69128 17.4424 3.41613 18.2643 3.61359 18.7704
+                            C3.78506 19.21 4.15335 19.5432 4.6078 19.6701
+                            C5.13111 19.8161 5.92151 19.4604 7.50231 18.7491
+                            L17.6367 14.1886
+                            C19.1797 13.4942 19.9512 13.1471 20.1896 12.6648
+                            C20.3968 12.2458 20.3968 11.7541 20.1896 11.3351
+                            C19.9512 10.8529 19.1797 10.5057 17.6367 9.81135
+                            L7.48483 5.24303
+                            C5.90879 4.53382 5.12078 4.17921 4.59799 4.32468
+                            C4.14397 4.45101 3.77572 4.78336 3.60365 5.22209
+                            C3.40551 5.72728 3.67772 6.54741 4.22215 8.18767
+                            L5.24829 11.2793
+                            C5.34179 11.561 5.38855 11.7019 5.407 11.8459
+                            C5.42338 11.9738 5.42321 12.1032 5.40651 12.231
+                            C5.38768 12.375 5.34057 12.5157 5.24634 12.7972" 
+                        stroke="#000000" 
+                        stroke-width="1.2" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round">
+                    </path>
+                    </g>
+                </svg>
+                </button>
+            </div>
+            <span class="attach-icon">
+                <label for="file-input">
+                    <svg fill="#000000" width="16px" height="16px" viewBox="0 0 35 35" data-name="Layer 2" id="Layer_2" xmlns="http://www.w3.org/2000/svg" stroke="#000000" stroke-width="0.00035">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                    <path d="M18,34.75
+                        A11.32,11.32,0,0,1,6.69,23.45
+                        V8
+                        A7.78,7.78,0,0,1,22.25,8
+                        V22.49
+                        a4.58,4.58,0,1,1-9.15,0
+                        V9.29
+                        a1.25,1.25,0,0,1,2.5,0
+                        v13.2
+                        a2.08,2.08,0,1,0,4.15,0
+                        V8
+                        A5.28,5.28,0,0,0,9.19,8
+                        V23.45
+                        A8.82,8.82,0,0,0,18,32.25
+                        c4.6,0,7.81-3.62,7.81-8.8
+                        V9.66
+                        a1.25,1.25,0,0,1,2.5,0
+                        V23.45
+                        C28.31,30,24,34.75,18,34.75Z"
+                        stroke="white"
+                        stroke-width="1.5"
+                        stroke-linecap="round">
+                    </path>
+                    </g>
+                    </svg>
+                </label>
+                <input type="file" id="file-input" style="display: none;">
+            </span>
+        </div>
+    </div>
+</div>
+
+<script type="text/x-magento-init">
+{
+   "#chat-container": { 
+       "Leeto_TicketLiveChat/js/popup_chat": {
+       } 
+   }
+} 
+</script>
