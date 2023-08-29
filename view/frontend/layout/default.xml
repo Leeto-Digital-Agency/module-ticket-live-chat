@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="Leeto_TicketLiveChat::css/popup_chat.css"/>
+    </head>
+    <body>
+        <referenceContainer name="after.body.start">
+            <block class="Leeto\TicketLiveChat\Block\Chat" name="leeto.popup.chat" template="Leeto_TicketLiveChat::chat/popup_chat.phtml" />
+        </referenceContainer>
+        <referenceBlock name="footer_links">
+            <block class="Magento\Framework\View\Element\Html\Link\Current" name="ticket_support_link">
+                <arguments>
+                    <argument name="label" xsi:type="string">Ticket Support</argument>
+                    <argument name="path" xsi:type="string">support/ticket/index</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+    </body>
+</page>
