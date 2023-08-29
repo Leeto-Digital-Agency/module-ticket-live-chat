@@ -15,7 +15,7 @@ use Leeto\TicketLiveChat\Model\TicketTypeRepository;
 use Magento\Framework\Api\SearchCriteriaBuilderFactory;
 use Magento\Customer\Model\Session;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory as OrderCollectionFactory;
-use Magento\Framework\App\Config\ScopeConfigInterface;
+use Leeto\TicketLiveChat\Helper\Ticket\TicketTypeHelper;
 use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Framework\Message\ManagerInterface;
 
@@ -42,9 +42,9 @@ class Form extends Template
     protected $orderCollectionFactory;
 
     /**
-     * @var ScopeConfigInterface
+     * @var TicketTypeHelper
      */
-    protected $scopeConfigInterface;
+    protected $ticketTypeHelper;
 
     /**
      * @var SessionManagerInterface
@@ -64,7 +64,7 @@ class Form extends Template
      * @param SearchCriteriaBuilderFactory  $searchCriteriaInterface
      * @param Session                       $customerSession
      * @param OrderCollectionFactory        $orderCollectionFactory
-     * @param ScopeConfigInterface          $scopeConfigInterface
+     * @param TicketTypeHelper              $ticketTypeHelper
      * @param SessionManagerInterface       $sessionManagerInterface
      * @param ManagerInterface              $messageManager
      */
@@ -74,7 +74,7 @@ class Form extends Template
         SearchCriteriaBuilderFactory $searchCriteriaBuilderFactory,
         Session                      $customerSession,
         OrderCollectionFactory       $orderCollectionFactory,
-        ScopeConfigInterface         $scopeConfigInterface,
+        TicketTypeHelper             $ticketTypeHelper,
         SessionManagerInterface      $sessionManagerInterface,
         ManagerInterface             $messageManager,
         array                        $data = [],
@@ -83,7 +83,7 @@ class Form extends Template
         $this->searchCriteriaBuilderFactory = $searchCriteriaBuilderFactory;
         $this->customerSession = $customerSession;
         $this->orderCollectionFactory = $orderCollectionFactory;
-        $this->scopeConfigInterface = $scopeConfigInterface;
+        $this->ticketTypeHelper = $ticketTypeHelper;
         $this->sessionManagerInterface = $sessionManagerInterface;
         $this->messageManager = $messageManager;
         parent::__construct($context, $data);
@@ -98,7 +98,6 @@ class Form extends Template
         $searchCriteria = $searchCriteriaBuilder->create();
         
         $ticketTypeList = $this->ticketTypeRepository->getList($searchCriteria);
-
         $ticketTypes = $ticketTypeList->getItems();
 
         return $ticketTypes;
@@ -146,10 +145,7 @@ class Form extends Template
      */
     public function getTicketOrderTypeId()
     {
-        return $this->scopeConfigInterface->getValue(
-            'support/ticket/order_type_ticket',
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
-        );
+        return $this->ticketTypeHelper->getTicketOrderTypeId();
     }
 
     /**

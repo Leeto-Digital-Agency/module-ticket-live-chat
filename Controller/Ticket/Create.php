@@ -10,6 +10,7 @@ use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Framework\File\UploaderFactory;
 use Magento\Framework\Filesystem;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Leeto\TicketLiveChat\Helper\Ticket\TicketTypeHelper;
 
 class Create extends Action
 {
@@ -33,9 +34,9 @@ class Create extends Action
      */
     protected $filesystem;
     /**
-     * @var ScopeConfigInterface
+     * @var TicketTypeHelper
      */
-    protected $scopeConfigInterface;
+    protected $ticketTypeHelper;
 
     /**
      * @param Context                 $context
@@ -43,7 +44,7 @@ class Create extends Action
      * @param PageFactory             $resultPageFactory
      * @param UploaderFactory         $uploaderFactory
      * @param Filesystem              $filesystem
-     * @param ScopeConfigInterface    $scopeConfigInterface
+     * @param TicketTypeHelper        $ticketTypeHelper
      */
     public function __construct(
         Context $context,
@@ -51,24 +52,21 @@ class Create extends Action
         PageFactory $resultPageFactory,
         UploaderFactory $uploaderFactory,
         Filesystem $filesystem,
-        ScopeConfigInterface $scopeConfigInterface
+        TicketTypeHelper $ticketTypeHelper
     ) {
         parent::__construct($context);
         $this->sessionManager = $sessionManager;
         $this->resultPageFactory = $resultPageFactory;
         $this->uploaderFactory = $uploaderFactory;
         $this->filesystem = $filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
-        $this->scopeConfigInterface = $scopeConfigInterface;
+        $this->ticketTypeHelper = $ticketTypeHelper;
     }
 
     public function execute()
     {
         if ($this->getRequest()->isPost()) {
             $data = $this->getRequest()->getPostValue();
-            $orderTypeId = $this->scopeConfigInterface->getValue(
-                'support/ticket/order_type_ticket', 
-                \Magento\Store\Model\ScopeInterface::SCOPE_STORE
-            );
+            $orderTypeId = $this->ticketTypeHelper->getTicketOrderTypeId();
 
             $errors = [];
             if (empty($data['ticket_type'])) {
