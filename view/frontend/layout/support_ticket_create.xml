@@ -1,0 +1,8 @@
+<!-- app/code/YourVendor/Support/view/frontend/layout/support_ticket_create.xml -->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="content">
+            <block class="Leeto\TicketLiveChat\Block\Ticket\Create" name="support.ticket.create" template="Leeto_TicketLiveChat::ticket/create.phtml" />
+        </referenceContainer>
+    </body>
+</page>

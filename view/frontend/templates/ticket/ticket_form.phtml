@@ -1,0 +1,222 @@
+<?php
+$ticketTypes = $this->getTicketTypes();
+$orderTypeId = $this->getTicketOrderTypeId();
+$formInput = $this->getFormData();
+$sameEmail = 1;
+$differentEmail = 2;
+?>
+
+<div class="ticket-form-wrapper">
+    <div class="form-title">
+        <div><?= $this->escapeHtml(__('Create Ticket')) ?></div>
+    </div>
+    <form enctype="multipart/form-data"
+        data-mage-init='{"validation":{}}'
+        id="ticket-form" method="post" action="<?= $escaper->escapeUrl($block->getPostActionUrl()) ?>">
+        <fieldset>
+            <legend><?= $this->escapeHtml(__('Select Ticket Type')) ?></legend>
+            <div class="options radio-group">
+                <?php foreach ($ticketTypes as $ticketType):?>
+                    <?php
+                        $disabledRadio = ($block->isLoggedIn() &&
+                            empty($block->getUserOrders()) &&
+                            $ticketType->getTypeId() == $orderTypeId) ? 'disabled' : '';
+                    ?>
+                    <div class="radio-wrapper">
+                        <label class="<?= $this->escapeHtml($disabledRadio) ?>">
+                            <input type="radio" 
+                                required="true" class="radio required-entry" 
+                                data-validate="{'validate-one-required-by-name':true}" name="ticket_type" 
+                                value="<?= $this->escapeHtml($ticketType->getTypeId()) ?>"
+                                <?= (isset($formInput['ticket_type']) ? $formInput['ticket_type'] : '') ==
+                                    $ticketType->getTypeId() ? "checked" : '' ?>
+                                <?= $this->escapeHtml($disabledRadio) ?>
+                            >
+                            <?= $this->escapeHtml($ticketType->getLabel()) ?>
+                        </label><br>
+                        <?php if ($disabledRadio): ?>
+                            <span class="empty-orders">
+                                <?= $this->escapeHtml(__("It seems you haven't placed an order yet!")) ?>
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+                <div class="field-error"></div>
+            </div>
+            <?php if ($block->getTicketFormDataErrors('ticket_type')): ?>
+                <div class="field-error">
+                    <?= $escaper->escapeHtml($block->getTicketFormDataErrors('ticket_type')) ?>
+                </div>
+            <?php endif; ?>
+        </fieldset>
+
+        <!-- Dropdown Field -->
+        <?php
+            $showOrderInput = (isset($formInput['ticket_type']) ? $formInput['ticket_type'] : '') == $orderTypeId;
+        ?>
+        <fieldset id="dropdown-field" style="<?= $showOrderInput ? 'display:block' : 'display:none' ?>">
+            <?php if ($this->isLoggedIn()): ?>
+                <legend><?= $this->escapeHtml(__('Select Option')) ?></legend>
+                <label>
+                    <select id="order_increment_id" name="increment_id">
+                        <option <?= isset($formInput['increment_id']) ? '' : "selected='selected'" ?> disabled="true">
+                            <?= $this->escapeHtml(__('--Please select your order --')) ?>
+                        </option>
+                        <?php
+                        $userOrders = $this->getUserOrders();
+                        foreach ($userOrders as $order): ?>
+                            <option <?= (isset($formInput['increment_id']) &&
+                                $formInput['increment_id'] == $order->getId()) ? "selected='selected'" : '' ?> 
+                                value="<?= $this->escapeHtml($order->getId()) ?>">
+                                    <?= $this->escapeHtml($order->getIncrementId()) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+                <?php if ($block->getTicketFormDataErrors('increment_id')): ?>
+                    <div class="field-error">
+                        <?= $escaper->escapeHtml($block->getTicketFormDataErrors('increment_id')) ?>
+                    </div>
+                <?php endif; ?>
+            <?php else: ?>
+                <legend><?= $this->escapeHtml(__('Please provide the order ID:')) ?></legend>
+                <label>
+                    <input <?= $showOrderInput ? 'required' : '' ?> type="text" 
+                        id="order_increment_id" name="increment_id"
+                        value="<?= isset($formInput['increment_id']) ?
+                            $this->escapeHtml($formInput['increment_id']) : '' ?>">
+                </label>
+                <?php if ($block->getTicketFormDataErrors('increment_id')): ?>
+                    <div class="field-error">
+                        <?= $escaper->escapeHtml($block->getTicketFormDataErrors('increment_id')) ?>
+                    </div>
+                <?php endif; ?>
+            <?php endif; ?>
+        </fieldset>
+        <!-- Subject Field -->
+        <fieldset>
+            <legend><?= $this->escapeHtml(__('Subject:')) ?></legend>
+            <label>
+                <input type="text" name="subject"
+                    value="<?= isset($formInput['subject']) ? $this->escapeHtml($formInput['subject']) : '' ?>" 
+                    required='true'>
+            </label>
+            <?php if ($block->getTicketFormDataErrors('subject')): ?>
+                <div class="field-error"><?= $escaper->escapeHtml($block->getTicketFormDataErrors('subject')) ?></div>
+            <?php endif; ?>
+        </fieldset>
+
+        <!-- Description Field -->
+        <fieldset>
+            <legend><?= $this->escapeHtml(__('Description')) ?></legend>
+            <label>
+                <textarea name="description" rows="4" 
+                    required='true'>
+                        <?= isset($formInput['description']) ? $this->escapeHtml($formInput['description']) : '' ?>
+                </textarea>
+            </label>
+            <?php if ($block->getTicketFormDataErrors('description')): ?>
+                <div class="field-error">
+                    <?= $escaper->escapeHtml($block->getTicketFormDataErrors('description')) ?>
+                </div>
+            <?php endif; ?>
+        </fieldset>
+
+        <!-- Text Input Field -->
+        <?php if (!$this->isLoggedIn()): ?>
+            <fieldset>
+                <legend><?= $this->escapeHtml(__('Email:')) ?></legend>
+                <label>
+                    <input type="text"
+                        data-validate="{required:true, 'validate-email':true}" name="email"
+                        value="<?= isset($formInput['email']) ?
+                            $this->escapeHtml($formInput['email']) : '' ?>" required='true'>
+                </label>
+                <?php if ($block->getTicketFormDataErrors('email')): ?>
+                    <div class="field-error"><?= $escaper->escapeHtml($block->getTicketFormDataErrors('email')) ?></div>
+                <?php endif; ?>
+            </fieldset>
+        <?php else: ?>
+            <fieldset>
+                <legend><?= $this->escapeHtml(__('Receive notification:')) ?></legend>
+                <div class="options radio-group">
+                    <div class="radio-wrapper">
+                        <label>
+                            <input type="radio" required="true"
+                                class="radio required-entry" data-validate="{'validate-one-required-by-name':true}"
+                                name="additional_email"
+                                value="<?= $this->escapeHtml($sameEmail) ?>"
+                                <?= (isset($formInput['additional_email']) &&
+                                $formInput['additional_email'] == $sameEmail) ? "checked" : '' ?>>
+                            <?= $this->escapeHtml(__('My current email')) ?>
+                        </label>
+                    </div>
+                    <div class="radio-wrapper">
+                        <label>
+                            <input type="radio" required="true"
+                                class="radio required-entry"
+                                data-validate="{'validate-one-required-by-name':true}"
+                                name="additional_email"
+                                value="<?= $this->escapeHtml($differentEmail) ?>"
+                                <?= (isset($formInput['additional_email']) &&
+                                $formInput['additional_email'] == $differentEmail) ? "checked" : '' ?>>
+                            <?= $this->escapeHtml(__('Another email')) ?>
+                        </label>
+                    </div>
+                    <div class="field-error"></div>
+                </div>
+            </fieldset>
+
+            <?php
+                $showAdditionalEmailInput = isset($formInput['additional_email']) &&
+                    $formInput['additional_email'] == $differentEmail;
+            ?>
+            <!-- Email address to receive notification about the ticket -->
+            <fieldset id="additional-input-field" 
+                style="<?= $showAdditionalEmailInput ? 'display:block' : 'display:none' ?>">
+                <legend><?= $this->escapeHtml(__('Email')) ?></legend>
+                <label>
+                    <input type="text" id="additional_email" 
+                        data-validate="{required:true, 'validate-email':true}" name="email" 
+                        required='true' value="<?= $this->escapeHtml($this->getCustomerEmail()) ?>">
+                </label>
+                <?php if ($block->getTicketFormDataErrors('email')): ?>
+                    <div class="field-error"><?= $escape->escapeHtml($block->getTicketFormDataErrors('email')) ?></div>
+                <?php endif; ?>
+            </fieldset>
+        <?php endif; ?>
+
+        <fieldset id="attachments-fieldset">
+            <div class="field">
+                <label for="attachments"><?= $this->escapeHtml(__('Attachments')) ?></label>
+                <input type="file" id="attachments" 
+                    name="attachments[]" accept=".jpg, .jpeg, .png, .pdf, .doc, .docx" multiple>
+            </div>
+            <div class="uploaded-files">
+                <div id="uploaded-file-names">
+                    <?= $this->escapeHtml(__('Uploaded Files:')) ?> 
+                        <span id="uploaded-files-list">
+                            <?= implode(', ', (isset($formInput['uploaded_file_names']) &&
+                                $this->escapeHtml($formInput['uploaded_file_names'])) ?
+                                $this->escapeHtml($formInput['uploaded_file_names']) : []) ?>
+                        </span>
+                </div>
+            </div>
+            <div id="attachments-error" class="field-error"></div>
+        </fieldset>
+        
+        <button type="submit"><?= $this->escapeHtml(__('Submit')) ?></button>
+    </form>
+</div>
+<?php
+    $uploadFileNamesJs = json_encode($formInput['uploaded_file_names'] ?? []);
+?>
+<script type="text/x-magento-init">
+{
+   "#ticket-form": {
+        "Leeto_TicketLiveChat/js/ticket-form": {
+            "uploadedFileNames": <?= $this->escapeHtml($uploadFileNamesJs) ?>
+        }
+   }
+}
+</script>
