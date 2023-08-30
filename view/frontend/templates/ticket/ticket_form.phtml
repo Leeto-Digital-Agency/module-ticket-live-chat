@@ -66,8 +66,8 @@ $differentEmail = 2;
                         $userOrders = $this->getUserOrders();
                         foreach ($userOrders as $order): ?>
                             <option <?= (isset($formInput['increment_id']) &&
-                                $formInput['increment_id'] == $order->getId()) ? "selected='selected'" : '' ?> 
-                                value="<?= $this->escapeHtml($order->getId()) ?>">
+                                $formInput['increment_id'] == $order->getIncrementId()) ? "selected='selected'" : '' ?> 
+                                value="<?= $this->escapeHtml($order->getIncrementId()) ?>">
                                     <?= $this->escapeHtml($order->getIncrementId()) ?>
                             </option>
                         <?php endforeach; ?>
@@ -110,10 +110,9 @@ $differentEmail = 2;
         <fieldset>
             <legend><?= $this->escapeHtml(__('Description')) ?></legend>
             <label>
-                <textarea name="description" rows="4" 
-                    required='true'>
-                        <?= isset($formInput['description']) ? $this->escapeHtml($formInput['description']) : '' ?>
-                </textarea>
+                <textarea name="description" rows="4"
+                    required='true'
+                    ><?= isset($formInput['description']) ? $this->escapeHtml($formInput['description']) : '' ?></textarea>
             </label>
             <?php if ($block->getTicketFormDataErrors('description')): ?>
                 <div class="field-error">
@@ -189,7 +188,7 @@ $differentEmail = 2;
         <fieldset id="attachments-fieldset">
             <div class="field">
                 <label for="attachments"><?= $this->escapeHtml(__('Attachments')) ?></label>
-                <input type="file" id="attachments" 
+                <input type="file" id="attachments"
                     name="attachments[]" accept=".jpg, .jpeg, .png, .pdf, .doc, .docx" multiple>
             </div>
             <div class="uploaded-files">

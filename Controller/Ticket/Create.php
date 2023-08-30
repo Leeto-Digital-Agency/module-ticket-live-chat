@@ -9,8 +9,15 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Framework\File\UploaderFactory;
 use Magento\Framework\Filesystem;
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use Leeto\TicketLiveChat\Helper\Ticket\TicketTypeHelper;
+use Leeto\TicketLiveChat\Model\TicketFactory;
+use Leeto\TicketLiveChat\Model\ChatFactory;
+use Leeto\TicketLiveChat\Model\ChatMessageFactory as MessageFactory;
+use Leeto\TicketLiveChat\Model\AttachmentFactory;
+use Magento\Customer\Model\Session;
+use Leeto\TicketLiveChat\Helper\Ticket\TicketStatusHelper;
+use Magento\Sales\Model\Order;
+use Leeto\TicketLiveChat\Helper\Chat\ChatStatusHelper;
 
 class Create extends Action
 {
@@ -33,10 +40,51 @@ class Create extends Action
      * @var Filesystem
      */
     protected $filesystem;
+
     /**
      * @var TicketTypeHelper
      */
     protected $ticketTypeHelper;
+    
+    /**
+     * @var TicketFactory
+     */
+    protected $ticketFactory;
+    
+    /**
+     * @var ChatFactory
+     */
+    protected $chatFactory;
+    
+    /**
+     * @var MessageFactory
+     */
+    protected $messageFactory;
+    
+    /**
+     * @var AttachmentFactory
+     */
+    protected $attachmentFactory;
+
+    /**
+     * @var Session
+     */
+    protected $customerSession;
+
+    /**
+     * @var TicketStatusHelper
+     */
+    protected $ticketStatusHelper;
+
+    /**
+     * @var Order
+     */
+    protected $orderModel;
+
+    /**
+     * @var ChatStatusHelper
+     */
+    protected $chatStatusHelper;
 
     /**
      * @param Context                 $context
@@ -45,6 +93,14 @@ class Create extends Action
      * @param UploaderFactory         $uploaderFactory
      * @param Filesystem              $filesystem
      * @param TicketTypeHelper        $ticketTypeHelper
+     * @param TicketFactory           $ticketFactory
+     * @param ChatFactory             $chatFactory
+     * @param MessageFactory          $messageFactory
+     * @param AttachmentFactory       $attachmentFactory
+     * @param Session                 $customerSession
+     * @param TicketStatusHelper      $ticketStatusHelper
+     * @param Order                   $orderModel
+     * @param ChatStatusHelper        $chatStatusHelper
      */
     public function __construct(
         Context $context,
@@ -52,70 +108,218 @@ class Create extends Action
         PageFactory $resultPageFactory,
         UploaderFactory $uploaderFactory,
         Filesystem $filesystem,
-        TicketTypeHelper $ticketTypeHelper
+        TicketTypeHelper $ticketTypeHelper,
+        TicketFactory $ticketFactory,
+        ChatFactory $chatFactory,
+        MessageFactory $messageFactory,
+        AttachmentFactory $attachmentFactory,
+        Session $customerSession,
+        TicketStatusHelper $ticketStatusHelper,
+        Order $orderModel,
+        ChatStatusHelper $chatStatusHelper
     ) {
         parent::__construct($context);
         $this->sessionManager = $sessionManager;
         $this->resultPageFactory = $resultPageFactory;
         $this->uploaderFactory = $uploaderFactory;
-        $this->filesystem = $filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
+        $this->filesystem = $filesystem;
         $this->ticketTypeHelper = $ticketTypeHelper;
+        $this->ticketFactory = $ticketFactory;
+        $this->chatFactory = $chatFactory;
+        $this->messageFactory = $messageFactory;
+        $this->attachmentFactory = $attachmentFactory;
+        $this->customerSession = $customerSession;
+        $this->ticketStatusHelper = $ticketStatusHelper;
+        $this->orderModel = $orderModel;
+        $this->chatStatusHelper = $chatStatusHelper;
     }
 
     public function execute()
     {
-        if ($this->getRequest()->isPost()) {
-            $data = $this->getRequest()->getPostValue();
-            $orderTypeId = $this->ticketTypeHelper->getTicketOrderTypeId();
+        try {
+            if ($this->getRequest()->isPost()) {
+                $data = $this->getRequest()->getPostValue();
+                $orderTypeId = $this->ticketTypeHelper->getTicketOrderTypeId();
+                $files = $this->getRequest()->getFiles('attachments');
 
-            $errors = [];
-            if (empty($data['ticket_type'])) {
-                $errors['ticket_type'] = __('Ticket Type is required.');
-            }
-            if (isset($data['increment_id']) 
-                && ($data['ticket_type'] == $orderTypeId) 
-                && empty($data['increment_id'])) 
-            {
-                $errors['increment_id'] = __('Please provide an order.');
-            }
-            if (empty($data['subject'])) {
-                $errors['subject'] = __('Subject is required.');
-            }
-            if (empty($data['description'])) {
-                $errors['description'] = 'Description is required.';
-            }
-            if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-                $errors['email'] = __('Invalid email format.');
-            }
-            if (isset($_FILES['attachments']) && !empty($_FILES['attachments']['name'][0])) {
-                $maxFileSize = 15 * 1024 * 1024; // 15 MB in bytes
-                $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
-
-                foreach ($_FILES['attachments']['tmp_name'] as $i => $tmpName) {
-                    if ($_FILES['attachments']['size'][$i] > $maxFileSize) {
-                        $errors['attachments'] = 'File size should not exceed 15 MB.';
-                    }
-
-                    $fileExtension = pathinfo($_FILES['attachments']['name'][$i], PATHINFO_EXTENSION);
-                    if (!in_array($fileExtension, $allowedExtensions)) {
-                        $errors['attachments'] = 'Only JPG, JPEG, PNG, PDF, DOC, and DOCX files are allowed.';
-                    }
+                $errors = [];
+                if (empty($data['ticket_type'])) {
+                    $errors['ticket_type'] = __('Ticket Type is required.');
                 }
-            }
-            if (!empty($errors)) {
-                foreach ($errors as $field => $error) {
-                    $this->messageManager->addErrorMessage($error);
+                if (isset($data['increment_id'])
+                    && ($data['ticket_type'] == $orderTypeId)
+                    && empty($data['increment_id'])
+                ) {
+                    $errors['increment_id'] = __('Please provide an order.');
                 }
-                $this->sessionManager->setFormData($data);
-                $this->sessionManager->setFormDataError($errors);
-                return $this->_redirect('*/*/');
+                if (empty($data['subject'])) {
+                    $errors['subject'] = __('Subject is required.');
+                }
+                if (empty($data['description'])) {
+                    $errors['description'] = __('Description is required.');
+                }
+                if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                    $errors['email'] = __('Invalid email format.');
+                }
+                $fileValidate = $this->validateUploadedFiles($files);
+                if ($fileValidate) {
+                    $errors['attachments'] = $fileValidate;
+                }
+
+                if (!empty($errors)) {
+                    foreach ($errors as $field => $error) {
+                        $this->messageManager->addErrorMessage($error);
+                    }
+                    $this->sessionManager->setFormData($data);
+                    $this->sessionManager->setFormDataError($errors);
+                    return $this->_redirect('*/*/');
+                }
+
+                $isLoggedIn = $this->customerSession->getCustomerId();
+                // Create Ticket
+                $ticketData = [
+                    'subject' => $data['subject'],
+                    'customer_id' => $isLoggedIn ? $isLoggedIn : null,
+                    'ticket_type' => $data['ticket_type'],
+                    'status_id' => $this->ticketStatusHelper->getOpenedStatusId(),
+                    'email' => $data['email']
+                ];
+                // check if order exist if not throw error
+                if ($data['ticket_type'] == $orderTypeId) {
+                    $orderIncrementId = $data['increment_id'];
+                    $order = $this->orderModel->loadByIncrementId($orderIncrementId);
+                    if (!$order->getId()) {
+                        $this->messageManager->addErrorMessage(__("Please provide a valid order."));
+                        $this->sessionManager->setFormData($data);
+                        $this->sessionManager->setFormDataError($errors);
+                        return $this->_redirect('*/*/');
+                    }
+                    $ticketData['order_id'] = $order->getId();
+                }
+                $ticket = $this->ticketFactory->create();
+                $ticket->setData($ticketData)->save();
+
+                // Create Chat
+                $chatData = [
+                    'ticket_id' => $ticket->getId(),
+                    'status_id' => $this->chatStatusHelper->getOnGoingStatusId(),
+                ];
+                $chat = $this->chatFactory->create();
+                $chat->setData($chatData)->save();
+
+                // Create Chat Message
+                if ($files[0]['name']) {
+                    $this->createAndSaveMessage(
+                        $chat->getId(),
+                        $isLoggedIn,
+                        $data['email'],
+                        $data['description'],
+                    );
+                    foreach ($files as $attachmentInfo) {
+                        // Generate a unique name for the file
+                        $uniqueFileName = uniqid() . '_' . $attachmentInfo['name'];
+                        
+                        // Save the file in the appropriate directory within your Magento installation
+                        $basePath = $this->filesystem
+                            ->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA)
+                            ->getAbsolutePath();
+                        $filePath = $basePath . 'custom_attachments/' . $uniqueFileName;
+    
+                        // Move the uploaded file to the desired location
+                        move_uploaded_file($attachmentInfo['tmp_name'], $filePath);
+
+                        // Create Attachment
+                        $attachmentData = [
+                            'chat_id' => $chat->getId(),
+                            'original_name' => $attachmentInfo['name'],
+                            'unique_name' => $uniqueFileName,
+                            'path' => $filePath,
+                        ];
+                        $attachment = $this->attachmentFactory->create();
+                        $attachment->setData($attachmentData)->save();
+                        // Create Chat Message
+                        $this->createAndSaveMessage(
+                            $chat->getId(),
+                            $isLoggedIn,
+                            $data['email'],
+                            null,
+                            $attachment->getId()
+                        );
+                    }
+                } else {
+                    $this->createAndSaveMessage(
+                        $chat->getId(),
+                        $isLoggedIn,
+                        $data['email'],
+                        $data['description'],
+                    );
+                }
+
+                $resultPage = $this->resultFactory->create(ResultFactory::TYPE_PAGE);
+                $resultPage->getConfig()->getTitle()->prepend(__('Ticket Created Successfully'));
+                return $resultPage;
+            }
+        } catch (\Exception $e) {
+            $this->messageManager->addErrorMessage(__('An error occurred while creating the ticket.'));
+            $this->_redirect('*/*/create');
+        }
+        return $this->resultPageFactory->create();
+    }
+
+    /**
+     * Validate Uploaded Files
+     *
+     * @param array $files
+     * @return string
+     */
+    protected function validateUploadedFiles(array $files)
+    {
+        $allowedExtensions = ['docx', 'doc', 'pdf', 'jpg', 'jpeg', 'png'];
+        $maxFileSize = 15 * 1024 * 1024; // 15 MB
+        $maxFileCount = 5;
+
+        $errorMessage = '';
+        $totalFileSize = 0;
+        $fileCount = 0;
+        foreach ($files as $file) {
+            $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+            if (!in_array($extension, $allowedExtensions) && $extension) {
+                $errorMessage = __('Invalid file extension.');
             }
 
-            $resultPage = $this->resultFactory->create(ResultFactory::TYPE_PAGE);
-            $resultPage->getConfig()->getTitle()->prepend(__('Ticket Created Successfully'));
-            return $resultPage;
+            $totalFileSize += $file['size'];
+            $fileCount++;
+
+            if ($file['size'] > $maxFileSize) {
+                $errorMessage = __('File size exceeds the limit.');
+            }
+
+            if ($fileCount > $maxFileCount) {
+                $errorMessage = __('Maximum file count exceeded.');
+            }
+        }
+        if ($totalFileSize > $maxFileSize) {
+            $errorMessage = __('Total file size exceeds the limit.');
         }
 
-        return $this->resultPageFactory->create();
+        return $errorMessage;
+    }
+
+    /**
+     * Create and save messages
+     */
+    public function createAndSaveMessage($chatId, $isLoggedIn, $email, $message = null, $attachmentId = null)
+    {
+        $messageData = [
+            'chat_id' => $chatId,
+            'from_id' => $isLoggedIn ? $isLoggedIn : null,
+            'is_admin' => null,
+            'email' => $email,
+            'message' => $message,
+            'attachment_id' => $attachmentId
+        ];
+        $message = $this->messageFactory->create();
+        $message->setData($messageData)->save();
     }
 }
