@@ -1,0 +1,10 @@
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="Leeto_TicketLiveChat::css/ticket/list.css"/>
+    </head>
+    <body>
+        <referenceContainer name="content">
+            <block class="Leeto\TicketLiveChat\Block\Adminhtml\Ticket\TicketList" name="leeto_custom_ticket_list" template="Leeto_TicketLiveChat::ticket/list.phtml"/>
+        </referenceContainer>
+    </body>
+</page>
