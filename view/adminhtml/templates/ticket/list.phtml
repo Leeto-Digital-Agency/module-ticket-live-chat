@@ -1,11 +1,50 @@
+<?php
+$tickets = $this->getTickets();
+?>
 <div id="ticket-admin-container">
     <div class="user-list-wrapper">
         <div class="chats-info">
             <p>My Chats</p>
-            <p>Total Chats: <span class="total-chats"></span></p>
+            <p>Total Chats: <span class="total-chats"><?= $escaper->escapeHtml(count($tickets)) ?></span></p>
         </div>
         <div class="user-list">
-            <!-- List of users goes here -->
+            <?php foreach ($tickets as $ticket): ?>
+                <div class="user-item" data-ticket-id="<?= $escaper->escapeHTML($ticket->getId()) ?>">
+                    <div class="user-avatar">
+                        <img src="<?= $escaper->escapeHtml($this->getDefaultImage()) ?>" alt="Image Placeholder">
+                    </div>
+                    <?php
+                        $customer = $this->getCustomerById($ticket->getCustomerId());
+                    ?>
+                    <div class="user-details">
+                        <h3><?= $escaper->escapeHtml($customer->getFirstname() . ' ' . $customer->getLastname()) ?></h3>
+                        <?php
+                            $latestMessageData = $block->getLatestMessageData($ticket->getId());
+                        ?>
+                        <?php if ($latestMessageData['isAdmin']): ?>
+                            <p class="latest-message from-admin"><?= $escaper->escapeHtml(__("Sent")) ?></p>
+                        <?php else: ?>
+                            <p class="latest-message from-customer">
+                                <?= $escaper->escapeHtml($latestMessageData['latest_message']) ?>
+                            </p>
+                        <?php endif; ?>
+                    </div>
+                    <?php
+                        $ticketStatuses = $block->getTicketStatuses();
+                    ?>
+                    <div id="status-update">
+                        <select id="ticket-status">
+                            <?php foreach ($ticketStatuses as $status): ?>
+                                <option 
+                                    <?= $ticket->getStatusId() == $status['value'] ? 'selected' : '' ?> 
+                                    value="<?= $escaper->escapeHtml($status['value']) ?>">
+                                    <?= $escaper->escapeHtml($status['label']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+            <?php endforeach; ?>
         </div>
     </div>
     <h1 class="welcome-message" style="display: none;"></h1>
@@ -13,33 +52,30 @@
         <div class="chat-header">
             <div class="left-info">
                 <div class="ticket-customer">
-                    <span class="title">User:</span>
-                    <span class="customer">52</span>
+                    <span class="title"><?= $escaper->escapeHtml(__('User:')) ?></span>
+                    <span class="customer"></span>
                 </div>
                 <div class="ticket-type">
-                    <span class="title">Order:</span>
-                    <span class="order-link-wrapper"><a href="" class="order-link">Order Link</a></span>
+                    <span class="title"></span>
+                    <span class="order-link-wrapper"><a target="_blank" href="" class="order-link"></a></span>
                     <br>
-                    <span class="title">General</span>
                 </div>
                 <div class="ticket-subject">
-                    <span class="title">Subject:</span>
-                    <span class="subject">I have a forgotten my email password and cannot retrieve it.</span>
+                    <span class="title"><?= $escaper->escapeHtml(__('Subject:')) ?></span>
+                    <span class="subject"></span>
                 </div>
             </div>
             <div class="right-info">
                 <div class="ticket-date">
-                    <span class="title">Created at:</span>
-                    <span class="date">12.07.2022</span>
+                    <span class="title"><?= $escaper->escapeHtml(__('Created at:')) ?></span>
+                    <span class="date"></span>
                 </div>
                 <div class="ticket-status">
-                    <span class="title">Status:</span>
-                    <span class="status active">Opened</span>
+                    <span class="title"><?= $escaper->escapeHtml(__('Status:')) ?></span>
                 </div>
             </div>
         </div>
         <div class="chat-messages">
-            <!-- Messages between selected user go here -->
         </div>
         <div class="chat-input">
             <div class="textarea-wrapper">
@@ -48,7 +84,16 @@
             </div>
             <div class="attach-icon">
                 <label for="file-input">
-                    <svg fill="#000000" width="16px" height="16px" viewBox="0 0 35 35" data-name="Layer 2" id="Layer_2" xmlns="http://www.w3.org/2000/svg" stroke="#000000" stroke-width="0.00035">
+                    <svg fill="#000000" 
+                        width="16px" 
+                        height="16px" 
+                        viewBox="0 0 35 35" 
+                        data-name="Layer 2" 
+                        id="Layer_2" 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        stroke="#000000" 
+                        stroke-width="0.00035"
+                    >
                     <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                     <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
                     <g id="SVGRepo_iconCarrier">
@@ -87,8 +132,13 @@
 <script type="text/x-magento-init">
 {
    "#ticket-admin-container": { 
-       "Leeto_TicketLiveChat/js/ticket/list": {
-       } 
+        "Leeto_TicketLiveChat/js/ticket/list": {
+            "ticketControllerUrl": "<?= $escaper->escapeHtml($this->getTicketControllerUrl()) ?>",
+            "messageControllerUrl": "<?= $escaper->escapeHtml($this->getMessageControllerUrl()) ?>",
+            "addAdminMessageControllerUrl": "<?= $escaper->escapeHtml($this->getAddAdminMessageControllerUrl()) ?>",
+            "addFileMessageControllerUrl": "<?= $escaper->escapeHtml($this->getAddAdminFileControllerUrl()) ?>",
+            "changeTicketStatusControllerUrl": "<?= $escaper->escapeHtml($this->getChangeTicketStatusControllerUrl()) ?>"
+        } 
    }
 } 
 </script>

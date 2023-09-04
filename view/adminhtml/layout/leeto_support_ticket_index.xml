@@ -5,6 +5,7 @@
     <body>
         <referenceContainer name="content">
             <block class="Leeto\TicketLiveChat\Block\Adminhtml\Ticket\TicketList" name="leeto_custom_ticket_list" template="Leeto_TicketLiveChat::ticket/list.phtml"/>
+            <block class="Magento\Framework\View\Element\Template" template="Leeto_TicketLiveChat::ticket/status-modal.phtml" name="status.modal" as="status_modal"/>
         </referenceContainer>
     </body>
 </page>

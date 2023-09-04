@@ -180,8 +180,8 @@ class Create extends Action
                 $ticketData = [
                     'subject' => $data['subject'],
                     'customer_id' => $isLoggedIn ? $isLoggedIn : null,
-                    'ticket_type' => $data['ticket_type'],
-                    'status_id' => $this->ticketStatusHelper->getOpenedStatusId(),
+                    'ticket_type_id' => $data['ticket_type'],
+                    'status_id' => $this->ticketStatusHelper->getStatusIdByLabel('opened'),
                     'email' => $data['email']
                 ];
                 // check if order exist if not throw error
@@ -220,20 +220,21 @@ class Create extends Action
                         $uniqueFileName = uniqid() . '_' . $attachmentInfo['name'];
                         
                         // Save the file in the appropriate directory within your Magento installation
-                        $basePath = $this->filesystem
-                            ->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA)
-                            ->getAbsolutePath();
-                        $filePath = $basePath . 'custom_attachments/' . $uniqueFileName;
+                        $mediaDirectory = $this->filesystem
+                            ->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
+                        $filePath = 'custom_attachments/' . $uniqueFileName;
+                        $mediaDirectory->writeFile($filePath, file_get_contents($attachmentInfo['tmp_name']));
     
-                        // Move the uploaded file to the desired location
-                        move_uploaded_file($attachmentInfo['tmp_name'], $filePath);
+                        $mediaUrl = $this->_url
+                            ->getBaseUrl(['_type' => \Magento\Framework\UrlInterface::URL_TYPE_MEDIA]);
+                        $fileUrl = $mediaUrl . $filePath;
 
                         // Create Attachment
                         $attachmentData = [
                             'chat_id' => $chat->getId(),
                             'original_name' => $attachmentInfo['name'],
                             'unique_name' => $uniqueFileName,
-                            'path' => $filePath,
+                            'path' => $fileUrl,
                         ];
                         $attachment = $this->attachmentFactory->create();
                         $attachment->setData($attachmentData)->save();
