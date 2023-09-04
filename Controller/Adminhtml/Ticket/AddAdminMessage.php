@@ -14,9 +14,6 @@ use Leeto\TicketLiveChat\Model\ResourceModel\ChatMessage\CollectionFactory as Ch
 
 class AddAdminMessage extends Action
 {
-    public const TEXT_TYPE_MESSAGE = "text";
-    public const FILE_TYPE_MESSAGE = "file";
-
     /**
      * @var JsonFactory
      */
