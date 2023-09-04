@@ -33,6 +33,80 @@
 #ticket-admin-container .user-list {
     overflow-y: auto;
 }
+#ticket-admin-container .user-list #status-update {
+    margin-left: auto;
+}
+#ticket-admin-container .user-list #ticket-status {
+    border: none;
+    background-color: transparent;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding: 0;
+    outline: none;
+    cursor: pointer;
+    border-bottom: 1px solid;
+}
+#ticket-admin-container .user-list #ticket-status option {
+    border-bottom: 1px solid #000;
+    padding: 5px;
+}
+#ticket-admin-container .user-list #ticket-status:hover, #ticket-admin-container .user-list #ticket-status:focus {
+    border: none;
+}
+#status-update-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    z-index: 1000; /* Make sure it's above other content */
+}
+
+/* Styles for the modal content */
+.modal-inner-wrapper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+    z-index: 1001; /* Make it appear above the overlay */
+}
+
+/* Styles for the modal title and content */
+.modal-title {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.modal-content p {
+    font-size: 16px;
+}
+
+/* Styles for the modal buttons */
+.modal-actions {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.modal-actions button {
+    margin: 0 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+}
+
+/* Close button (optional) */
+.modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 24px;
+}
 #ticket-admin-container .user-list .user-item {
     display: flex;
     align-items: center;
@@ -51,6 +125,29 @@
     background-color: #ffffff;
     font-weight: bold;
     border-left: 5px solid #0062cccc;
+}
+#ticket-admin-container .user-list .user-item  {
+    position: relative;
+}
+#ticket-admin-container .user-list .user-item .user-details .latest-message.from-customer {
+    font-weight: 600;
+    position: relative;
+    width: fit-content;
+    margin: 0;
+}
+#ticket-admin-container .user-list .user-item .user-details .latest-message.from-customer:after {
+    content: "";
+    width: 8px;
+    height: 8px;
+    background-color: blue;
+    display: block;
+    position: absolute;
+    right: -15px;
+    top: 35%;
+    border-radius: 50%;
+}
+#ticket-admin-container .user-list .user-item .user-details .latest-message.from-customer.opened:after {
+    display: none;
 }
 #ticket-admin-container .user-list .user-item .user-avatar img {
     width: 36px;
@@ -116,6 +213,9 @@
 }
 #ticket-admin-container .chat-area .chat-header .right-info .ticket-status .active {
     color: green;
+}
+#ticket-admin-container .chat-area .chat-header .right-info .ticket-status .closed {
+    color: red;
 }
 #ticket-admin-container .chat-area .chat-messages {
     flex: 1;
@@ -191,6 +291,9 @@
 #ticket-admin-container .chat-area .chat-messages .message-chat.user .file-name {
     color: #007bff;
     text-decoration: underline;
+}
+#ticket-admin-container .chat-area .chat-messages .message-chat .file-image {
+    max-height: 200px;
 }
 #ticket-admin-container .chat-area .chat-messages .message-chat.admin {
     background-color: #007bff;

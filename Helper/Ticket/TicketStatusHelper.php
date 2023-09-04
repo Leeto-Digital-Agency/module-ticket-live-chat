@@ -39,17 +39,37 @@ class TicketStatusHelper extends AbstractHelper
         $this->searchCriteriaInterface = $searchCriteriaInterface;
     }
 
-    public function getOpenedStatusId()
+    /**
+     * @return int
+     */
+    public function getStatusIdByLabel($label)
     {
         $labelFilter = $this->filterBuilder
-            ->setField('label') // Change this to the actual field name in your table
+            ->setField('label')
             ->setConditionType('like')
-            ->setValue('%opened%') // Change this value according to your needs
+            ->setValue('%' . $label . '%')
             ->create();
         $searchCriteria = $this->searchCriteriaInterface
             ->addFilters([$labelFilter])
             ->create();
 
         return $this->ticketStatusRepositoryInterface->getList($searchCriteria)->getItems()[0]->getStatusId();
+    }
+
+    /**
+     * @return array
+     */
+    public function getTicketStatuses()
+    {
+        $searchCriteria = $this->searchCriteriaInterface->create();
+        $tickets = [];
+        foreach ($this->ticketStatusRepositoryInterface->getList($searchCriteria)->getItems() as $status) {
+            $tickets[] = [
+                "value" => $status->getStatusId(),
+                "label" => $status->getLabel()
+            ];
+        }
+        
+        return $tickets;
     }
 }
