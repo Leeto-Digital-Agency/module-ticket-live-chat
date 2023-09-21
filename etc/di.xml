@@ -21,4 +21,12 @@
 	<preference for="Leeto\TicketLiveChat\Api\AttachmentRepositoryInterface" type="Leeto\TicketLiveChat\Model\AttachmentRepository"/>
 	<preference for="Leeto\TicketLiveChat\Api\Data\AttachmentInterface" type="Leeto\TicketLiveChat\Model\Attachment"/>
 	<preference for="Leeto\TicketLiveChat\Api\Data\AttachmentSearchResultsInterface" type="Magento\Framework\Api\SearchResults"/>
+	
+	<type name="Magento\Framework\Console\CommandList">
+		<arguments>
+			<argument name="commands" xsi:type="array">
+				<item name="WebSocketServer" xsi:type="object">Leeto\TicketLiveChat\Console\Command\WebSocketServer</item>
+			</argument>
+		</arguments>
+	</type>
 </config>

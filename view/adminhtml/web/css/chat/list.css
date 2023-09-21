@@ -1,3 +1,6 @@
+.d-flex {
+    display: flex;
+}
 #chat-admin-container {
     display: flex;
     height: 67vh;
@@ -13,18 +16,15 @@
     align-items: center;
     border-radius: 5px;
 }
-
 #chat-admin-container .welcome-message {
     width: 75%;
     display: flex;
     justify-content: center;
     align-items: center;
 }
-
 #chat-admin-container .chats-info p {
     margin: 0;
 }
-
 #chat-admin-container .user-list-wrapper {
     width: 25%;
     display: flex;
@@ -33,78 +33,73 @@
     background-color: #f5f5f5;
     border-right: 1px solid #e1e1e1;
 }
-
 #chat-admin-container .user-list {
     overflow-y: auto;
 }
-
 #chat-admin-container .user-list .user-item {
     display: flex;
+    justify-content: space-between;
     align-items: center;
     cursor: pointer;
     padding: 15px;
     border-bottom: 1px solid #d1d1d1;
     transition: background-color 0.3s;
 }
-
 #chat-admin-container .user-list .user-item:last-child {
     border-bottom: none;
 }
-
 #chat-admin-container .user-list .user-item:hover {
     background-color: #f0f0f0;
 }
-
 #chat-admin-container .user-list .user-item.selected {
     background-color: #ffffff;
     font-weight: bold;
     border-left: 5px solid #0062cccc;
 }
-
 #chat-admin-container .user-list .user-item .user-avatar img {
     width: 36px;
     height: 36px;
     border-radius: 50%;
     object-fit: cover;
 }
-
+#chat-admin-container .user-list .user-item .unread-messages{
+    background-color: green;
+    color: white;
+    border-radius: 40px;
+    padding: 6px 10px;
+}
 #chat-admin-container .user-list .user-item .user-details {
     margin-left: 10px;
 }
-
 #chat-admin-container .user-list .user-item .user-details h3 {
     margin: 0;
     font-size: 16px;
     color: #333;
 }
-
 #chat-admin-container .user-list .user-item .user-details .latest-message {
     color: #999;
     font-size: 14px;
 }
-
 #chat-admin-container .chat-area {
     width: 75%;
     display: flex;
     flex-direction: column;
 }
-
 #chat-admin-container .chat-area .error-message {
     color: red;
     padding: 10px 0 0px 31px;
 }
-
 #chat-admin-container .chat-area .chat-header {
     padding: 20px;
     border-bottom: 1px solid #e1e1e1;
     background-color: #ffffff;
+    display: flex;
+    justify-content: space-between;
 }
-
-#chat-admin-container .chat-area .chat-header h2 {
+/* #chat-admin-container .chat-area .chat-header h2 {
     margin: 0;
     font-size: 18px;
-}
-
+} */
 #chat-admin-container .chat-area .chat-messages {
     flex: 1;
     padding: 20px;
@@ -114,7 +109,6 @@
     flex-direction: column;
     gap: 14px;
 }
-
 #chat-admin-container .chat-area .chat-input {
     padding: 20px 20px 0 20px;
     background-color: #fff;
@@ -123,13 +117,11 @@
     align-items: center;
     border-top: 1px solid #e1e1e1;
 }
-
 #chat-admin-container .chat-area .chat-input .textarea-wrapper {
     width: 100%;
     display: flex;
     align-items: center;
 }
-
 #chat-admin-container .chat-area .chat-input textarea {
     height: 80px;
     max-height:  150px;
@@ -141,7 +133,6 @@
     border: none !important;
     box-shadow: none !important;
 }
-
 #chat-admin-container .chat-area .chat-input button {
     padding: 10px 20px;
     margin-left: 10px;
@@ -154,7 +145,6 @@
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
     height: 40px;
 }
-
 #chat-admin-container .chat-area .chat-input button:hover {
     background-color: #0056b3;
 }
@@ -165,11 +155,9 @@
     width: fit-content;
     align-self: flex-start;
 }
-
 #chat-admin-container .chat-area .chat-input .attach-icon label {
     cursor: pointer;
 }
-
 #chat-admin-container .chat-area .chat-messages .message-chat {
     max-width: 80%;
     word-wrap: break-word;
@@ -178,7 +166,9 @@
     border-radius: 10px;
     padding: 8px 10px;
 }
-
+#chat-admin-container .chat-area .chat-messages .message-chat .file-image {
+    max-height: 270px;
+}
 #chat-admin-container .chat-area .chat-messages .message-chat.user {
     background-color: #f5f5f5;
     color: #333;
@@ -188,14 +178,45 @@
     color: #007bff;
     text-decoration: underline;
 }
-
 #chat-admin-container .chat-area .chat-messages .message-chat.admin {
     background-color: #007bff;
     color: #ffffff;
     align-self: flex-end;
 }
-
 #chat-admin-container .chat-area .chat-messages .message-chat.admin .file-name {
     color: #ffffff;
     text-decoration: underline;
+}
+#chat-admin-container .chat-area .chat-header .left-info {
+    max-width: 70%;
+}
+#chat-admin-container .chat-area .chat-header .right-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+#chat-admin-container .chat-area .chat-header .left-info .chat-customer {
+    font-size: 18px;
+}
+#chat-admin-container .chat-area .chat-header .left-info .chat-customer .title {
+    font-weight: 600;
+    font-size: 20px;
+}
+#chat-admin-container .chat-area .chat-header .right-info .chat-date,
+#chat-admin-container .chat-area .chat-header .right-info .chat-status {
+    font-size: 18px;
+}
+#chat-admin-container .chat-area .chat-header .right-info .chat-date .title,
+#chat-admin-container .chat-area .chat-header .right-info .chat-status .title {
+    font-weight: 600;
+    font-size: 20px;
+}
+#chat-admin-container .chat-area .chat-header .right-info .chat-status .active {
+    color: green;
+}
+#chat-admin-container .chat-area .chat-header .right-info .chat-status .closed {
+    color: red;
+}
+#chat-admin-container .chat-area .chat-header .right-info .chat-status .pending {
+    color: rgb(238, 220, 63);
 }

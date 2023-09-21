@@ -14,6 +14,9 @@ interface ChatInterface
     public const TICKET_ID = 'ticket_id';
     public const CHAT_ID = 'chat_id';
     public const STATUS_ID = 'status_id';
+    public const EMAIL = 'email';
+    public const CUSTOMER_ID = 'customer_id';
+    public const UUID = 'uuid';
 
     /**
      * Get chat_id
@@ -53,4 +56,43 @@ interface ChatInterface
      * @return \Leeto\TicketLiveChat\Chat\Api\Data\ChatInterface
      */
     public function setStatusId($statusId);
+
+    /**
+     * Get email
+     * @return string|null
+     */
+    public function getEmail();
+
+    /**
+     * Set email
+     * @param string $email
+     * @return \Leeto\TicketLiveChat\Chat\Api\Data\ChatInterface
+     */
+    public function setEmail($email);
+
+    /**
+     * Get customer_id
+     * @return string|null
+     */
+    public function getCustomerId();
+
+    /**
+     * Set customer_id
+     * @param string $customerId
+     * @return \Leeto\TicketLiveChat\Chat\Api\Data\ChatInterface
+     */
+    public function setCustomerId($customerId);
+
+    /**
+     * Get uuid
+     * @return string|null
+     */
+    public function getUuid();
+
+    /**
+     * Set uuid
+     * @param string $uuid
+     * @return \Leeto\TicketLiveChat\Chat\Api\Data\ChatInterface
+     */
+    public function setUuid($uuid);
 }

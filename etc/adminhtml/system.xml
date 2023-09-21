@@ -16,5 +16,38 @@
 				</field>
 			</group>
 		</section>
+		<tab id="leeto" translate="label" sortOrder="999">
+			<label>Leeto</label>
+		</tab>
+		<section id="live_chat" sortOrder="10" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+			<label>Live Chat</label>
+			<tab>leeto</tab>
+			<resource>Magento_Backend::content</resource>
+			<group id="settings" sortOrder="10" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+				<label>Live Chat Settings</label>
+				<field id="websocket_port" type="text" sortOrder="10" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+					<label>WebSocket Port</label>
+					<validate>validate-no-empty</validate>
+				</field>
+				<field id="ongoing_chat_status" type="select" sortOrder="10" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+					<label>Ongoing/Active Chat Status</label>
+					<source_model>Leeto\TicketLiveChat\Model\Config\Source\Chat\Status</source_model>
+				</field>
+				<field id="closed_chat_status" type="select" sortOrder="10" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+					<label>Closed Chat Status</label>
+					<source_model>Leeto\TicketLiveChat\Model\Config\Source\Chat\Status</source_model>
+				</field>
+				<field id="user_avatar_image" type="Magento\Config\Block\System\Config\Form\Field\File" sortOrder="20" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+					<label>User Avatar Image</label>
+					<backend_model>Magento\Config\Model\Config\Backend\Image</backend_model>
+					<upload_dir config="system" scope_info="1">avatar</upload_dir>
+				</field>
+				<field id="support_avatar_image" type="Magento\Config\Block\System\Config\Form\Field\File" sortOrder="30" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+					<label>Support Avatar Image</label>
+					<backend_model>Magento\Config\Model\Config\Backend\Image</backend_model>
+					<upload_dir config="system" scope_info="1">avatar</upload_dir>
+				</field>
+			</group>
+		</section>
 	</system>
 </config>

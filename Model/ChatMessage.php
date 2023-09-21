@@ -56,23 +56,6 @@ class ChatMessage extends AbstractModel implements ChatMessageInterface
     /**
      * @return string|null
      */
-    public function getFromId()
-    {
-        return $this->getData(self::FROM_ID);
-    }
-
-    /**
-     * @param $fromId
-     * @return Leeto\TicketLiveChat\Api\Data\ChatMessageInterface
-     */
-    public function setFromId($fromId)
-    {
-        return $this->setData(self::FROM_ID, $fromId);
-    }
-
-    /**
-     * @return string|null
-     */
     public function getIsAdmin()
     {
         return $this->getData(self::IS_ADMIN);
@@ -85,23 +68,6 @@ class ChatMessage extends AbstractModel implements ChatMessageInterface
     public function setIsAdmin($isAdmin)
     {
         return $this->setData(self::IS_ADMIN, $isAdmin);
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getEmail()
-    {
-        return $this->getData(self::EMAIL);
-    }
-
-    /**
-     * @param $email
-     * @return Leeto\TicketLiveChat\Api\Data\ChatMessageInterface
-     */
-    public function setEmail($email)
-    {
-        return $this->setData(self::EMAIL, $email);
     }
 
     /**
@@ -136,5 +102,39 @@ class ChatMessage extends AbstractModel implements ChatMessageInterface
     public function setAttachmentId($attachmentId)
     {
         return $this->setData(self::ATTACHMENT_ID, $attachmentId);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getIsRead()
+    {
+        return $this->getData(self::IS_READ);
+    }
+
+    /**
+     * @param $isRead
+     * @return Leeto\TicketLiveChat\Api\Data\ChatMessageInterface
+     */
+    public function setIsRead($isRead)
+    {
+        return $this->setData(self::IS_READ, $isRead);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getCreatedAt()
+    {
+        return $this->getData(self::CREATED_AT);
+    }
+
+    /**
+     * @param $createdAt
+     * @return Leeto\TicketLiveChat\Api\Data\ChatMessageInterface
+     */
+    public function setCreatedAt($createdAt)
+    {
+        return $this->setData(self::CREATED_AT, $createdAt);
     }
 }
