@@ -1,10 +1,12 @@
+.d-none {
+    display: none;
+}
 #chat-container {
     position: fixed;
     bottom: 20px;
     right: 20px;
     z-index: 1000;
 }
-
 #chat-container .chat-button {
     border: none;
     background-color: #0062cc !important;
@@ -17,16 +19,23 @@
     cursor: pointer;
     transition: all 0.15s ease-in-out;
 }
+#chat-container .unread-messages-count {
+    position: absolute;
+    background-color: red;
+    right: 5px;
+    top: -15px;
+    padding: 5px;
+    padding: 4px 8px;
+    border-radius: 50px;
+}
 #chat-container .chat-button.active {
     box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2) !important;
 }
-
 #chat-container .chat-button-wrapper {
     display: flex;
     align-items: center;
     gap: 6px;
 }
-
 #chat-container .chat-popup {
     position: absolute;
     bottom: calc(100% + 10px); /* Adjust the gap between button and popup */
@@ -56,24 +65,19 @@
     scrollbar-width: thin;
     scrollbar-color: #ccc #f5f5f5;
 }
-
 #chat-container .chat-wrapper::-webkit-scrollbar {
     width: 8px;
 }
-
 #chat-container .chat-wrapper::-webkit-scrollbar-track {
     background-color: #f5f5f5;
 }
-
 #chat-container .chat-wrapper::-webkit-scrollbar-thumb {
     background-color: #ccc;
     border-radius: 10px;
 }
-
 #chat-container .chat-wrapper::-webkit-scrollbar-thumb:hover {
     background-color: #aaa;
 }
-
 #chat-container .chat-header {
     display: flex;
     justify-content: space-between;
@@ -83,7 +87,6 @@
     border-top-left-radius: 10px;
     border-top-right-radius: 10px;
 }
-
 #chat-container .chat-header .welcome-message-wrapper {
     width: 100%;
     display: flex;
@@ -94,7 +97,6 @@
     color: white;
     padding: 10px 0px;
 }
-
 #chat-container .admin-status {
     display: flex;
     align-items: center;
@@ -105,52 +107,49 @@
     border-radius: 5px;
     padding: 10px 0px;
 }
-
 #chat-container .dot {
     display: inline-block;
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background-color: green;
     margin-right: 5px;
 }
-
+.online {
+    background-color: green;
+}
+.offline {
+    background-color: gray;
+}
 #chat-container .admin-name {
     font-size: 14px;
     font-style: italic;
 }
-
 #chat-container .welcome-message {
     font-size: 18px;
     text-align: center;
     width: 70%;
 }
-
 #chat-container .close-button {
     border: none !important;
     background-color: transparent !important;
     cursor: pointer;
 }
-
 #chat-container .close-button svg {
     width: 20px;
     height: 20px;
     fill: #fff;
     color: #fff;
 }
-
 #chat-container .close-button svg path {
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
 }
-
 #chat-container .chat-messages {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
-
 #chat-container .message {
     display: flex;
     flex-direction: column;
@@ -160,35 +159,29 @@
     padding: 8px 10px;
     word-break: break-word;
 }
-
 #chat-container .user-message {
     align-self: flex-end;
     background-color: #007bff;
     color: white;
 }
-
 #chat-container .user-message .file-content a {
     color: white;
     text-decoration: underline;
 }
-
 #chat-container .user-message .text {
     display: flex;
     gap: 6px;
     align-items: center;
 }
-
 #chat-container .user-message .text .file-icon {
     display: flex;
     align-items: center;
     height: 100%;
     line-height: 0;
 }
-
 #chat-container .user-message .text .file-icon svg path {
     fill: #fff;
 }
-
 #chat-container .support-message {
     align-self: flex-start;
     background-color: #e3e3e3;
@@ -197,25 +190,21 @@
     flex-direction: column;
     align-items: flex-start;
 }
-
 #chat-container .support-message-header {
     display: flex;
     align-items: center;
     margin-bottom: 5px;
 }
-
 #chat-container .support-message-avatar {
     width: 30px;
     height: 30px;
     border-radius: 50%;
     margin-right: 10px;
 }
-
 #chat-container .support-message-name {
     font-weight: bold;
     font-size: 14px;
 }
-
 #chat-container .chat-input {
     display: flex;
     flex-direction: column;
@@ -230,7 +219,6 @@
 #chat-container .chat-input .input-wrapper {
     display: flex;
 }
-
 #chat-container .chat-input textarea {
     border: none;
     background-color: #fff;
@@ -253,43 +241,35 @@
     outline: none;
     box-shadow: none;
 }
-
 #chat-container .chat-input button {
     border: none;
     background-color: transparent;
     cursor: pointer;
     padding: 0;
 }
-
 #chat-container .chat-input .send-icon {
     height: 100%;
     display: flex;
 }
-
 #chat-container .chat-input .attach-icon {
     padding-left: 5px;
 }
-
 #chat-container .chat-input .attach-icon label {
     cursor: pointer;
 }
-
 #chat-container .chat-input .attach-icon svg {
     fill: gray;
 }
-
 #chat-container .chat-messages .message-file {
     display: flex;
     align-items: center;
     margin-left: 10px;
 }
-
 #chat-container .chat-messages .message-file a {
     color: #007bff;
     text-decoration: none;
     margin-left: 5px;
 }
-
 #chat-container .error-message {
     color: red;
     bottom: 1px;
@@ -298,12 +278,10 @@
     width: 92%;
     left: 20px;
 }
-
 #chat-container #email-error-message {
     color: red;
     font-size: 14px;
 }
-
 #chat-container .email-input-section {
     padding: 20px;
     background-color: white;
@@ -314,7 +292,6 @@
     justify-content: center;
     gap: 10px;
 }
-
 #chat-container .email-input-section input[type="email"] {
     padding: 10px;
     border: 1px solid #ccc;
@@ -324,7 +301,6 @@
 #chat-container .email-input-section label {
     color: #837f7f;
 }
-
 #chat-container .email-input-section button {
     background-color: #0062cc;
     color: white;
@@ -335,12 +311,9 @@
     font-size: 14px;
     transition: background-color 0.2s ease-in-out;
 }
-
 #chat-container .email-input-section button:hover {
     background-color: #0051aa;
 }
-
-
 @media (max-width: 480px) {
     #chat-container .chat-popup {
         bottom: -20px !important;
@@ -350,6 +323,6 @@
         border-radius: 0;
     }
     #chat-container .chat-wrapper {
-        max-height: 600px;
+        max-height: 670px;
     }
 }

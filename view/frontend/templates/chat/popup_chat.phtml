@@ -1,5 +1,15 @@
+<?php
+
+    $helper = $this->helper('Leeto\TicketLiveChat\Helper\Data');
+    $loggedInUserId = $helper->getLoggedInUser() ? $helper->getLoggedInUser()->getId() : null;
+    $supportAvatarImagePath = $helper->getSupportAvatarImagePath();
+    $webBaseUrl = substr($helper->getWebBaseUrl(), strpos($helper->getWebBaseUrl(), "//") + 2, -1);
+    $webSocketPort = $helper->getWebsocketPort();
+?>
+
 <div id="chat-container">
     <button class="chat-button">
+        <div class="unread-messages-count d-none"></div>
         <div class="chat-button-wrapper">
             <span>
                 <svg width="26px" height="26px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -34,20 +44,23 @@
                 <button class="close-button">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                         <path d="M0 0h24v24H0z" fill="none"></path>
-                        <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" 
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        </path>
                     </svg>
                 </button>
             </div>
             <div class="admin-status">
                 <span class="dot"></span>
-                <span class="admin-name"><?= $escaper->escapeHtml(__('Support is available')) ?></span>
+                <span class="admin-name"></span>
             </div>
         </div>
         <div class="email-input-section">
             <label for="email-input">
                 <?= $escaper->escapeHtml(__('Please enter your email address to start the chat')) ?>
             </label>
-            <input type="email" class="required" id="email-input" placeholder="<?= $escaper->escapeHtml(__('Enter your email')) ?>">
+            <input type="email" class="required" id="email-input" 
+                placeholder="<?= $escaper->escapeHtml(__('Enter your email')) ?>">
             <span id="email-error-message" style="display: none;"></span>
             <button id="continue-button"><?= $escaper->escapeHtml(__('Continue')) ?></button>
         </div>
@@ -55,7 +68,7 @@
             <div class="chat-messages">
                 <div class="message support-message">
                     <div class="support-message-header">
-                        <img class="support-message-avatar" src="https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png">
+                        <img class="support-message-avatar" src="<?= $supportAvatarImagePath ?>">
                         <span class="support-message-name"><?= $escaper->escapeHtml(__('Support')) ?></span>
                     </div>
                     <div class="support-message-content">
@@ -66,11 +79,14 @@
         </div>
         <div class="chat-input">
             <div class="input-wrapper">
-                <textarea name="" id="" placeholder="<?=  $escaper->escapeHtml(__('Type your message...')) ?>"></textarea>
+                <textarea name="" id="" 
+                placeholder="<?= $escaper->escapeHtml(__('Type your message...')) ?>"></textarea>
                 <button class="send-icon">
-                <svg width="28px" height="28px" viewBox="0 0 24.00 24.00" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="28px" height="28px" viewBox="0 0 24.00 24.00" 
+                    fill="none" xmlns="http://www.w3.org/2000/svg">
                     <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#CCCCCC" stroke-width="0.048"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"
+                     stroke="#CCCCCC" stroke-width="0.048"></g>
                     <g id="SVGRepo_iconCarrier">
                     <path d="M11.5003 12H5.41872
                             M5.24634 12.7972L4.24158 15.7986
@@ -100,7 +116,9 @@
             </div>
             <span class="attach-icon">
                 <label for="file-input">
-                    <svg fill="#000000" width="16px" height="16px" viewBox="0 0 35 35" data-name="Layer 2" id="Layer_2" xmlns="http://www.w3.org/2000/svg" stroke="#000000" stroke-width="0.00035">
+                    <svg fill="#000000" width="16px" height="16px" viewBox="0 0 35 35" 
+                        data-name="Layer 2" id="Layer_2" xmlns="http://www.w3.org/2000/svg"
+                        stroke="#000000" stroke-width="0.00035">
                     <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                     <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
                     <g id="SVGRepo_iconCarrier">
@@ -138,9 +156,13 @@
 
 <script type="text/x-magento-init">
 {
-   "#chat-container": { 
-       "Leeto_TicketLiveChat/js/popup_chat": {
-       } 
-   }
+    "#chat-container": { 
+        "Leeto_TicketLiveChat/js/chat/popup-chat": {
+            "loggedInUserId": "<?= $loggedInUserId ?>",
+            "supportAvatarImagePath": "<?= $supportAvatarImagePath ?>",
+            "webBaseUrl": "<?= $webBaseUrl ?>",
+            "webSocketPort": "<?= $webSocketPort ?>"
+        }
+    }
 } 
 </script>

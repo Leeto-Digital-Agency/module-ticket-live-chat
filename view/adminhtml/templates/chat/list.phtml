@@ -1,8 +1,8 @@
 <div id="chat-admin-container">
     <div class="user-list-wrapper">
         <div class="chats-info">
-            <p>My Chats</p>
-            <p>Total Chats: <span class="total-chats"></span></p>
+            <p><?= $escaper->escapeHtml(__('My Chats')) ?></p>
+            <p><?= $escaper->escapeHtml(__('Total Chats:')) ?> <span class="total-chats"></span></p>
         </div>
         <div class="user-list">
             <!-- List of users goes here -->
@@ -11,19 +11,41 @@
     <h1 class="welcome-message" style="display: none;"></h1>
     <div class="chat-area">
         <div class="chat-header">
-            <h2>Chat with <span class="user-name"></span></h2>
+            <!-- <h2><?= $escaper->escapeHtml(__('Chat with')) ?><span class="user-name"></span></h2> -->
+            <div class="left-info">
+                <div class="chat-customer">
+                    <span class="title"><?= $escaper->escapeHtml(__('User:')) ?></span>
+                    <span class="customer"></span>
+                </div>
+                <div class="chat-customer">
+                    <span class="title"><?= $escaper->escapeHtml(__('Email:')) ?></span>
+                    <span class="email"></span>
+                </div>
+            </div>
+            <div class="right-info">
+                <div class="chat-date">
+                    <span class="title"><?= $escaper->escapeHtml(__('Created at:')) ?></span>
+                    <span class="date"></span>
+                </div>
+                <div class="chat-status">
+                    <span class="title"><?= $escaper->escapeHtml(__('Status:')) ?></span>
+                    <span class="status"></span>
+                </div>
+            </div>
         </div>
         <div class="chat-messages">
             <!-- Messages between selected user go here -->
         </div>
         <div class="chat-input">
             <div class="textarea-wrapper">
-                <textarea placeholder="Type your message..."></textarea>
-                <button>Send</button>
+                <textarea placeholder="<?= $escaper->escapeHtml(__('Type your message...')) ?>"></textarea>
+                <button><?= $escaper->escapeHtml(__('Send')) ?></button>
             </div>
             <div class="attach-icon">
                 <label for="file-input">
-                    <svg fill="#000000" width="16px" height="16px" viewBox="0 0 35 35" data-name="Layer 2" id="Layer_2" xmlns="http://www.w3.org/2000/svg" stroke="#000000" stroke-width="0.00035">
+                    <svg fill="#000000" width="16px" height="16px" viewBox="0 0 35 35" 
+                        data-name="Layer 2" id="Layer_2" xmlns="http://www.w3.org/2000/svg" 
+                        stroke="#000000" stroke-width="0.00035">
                     <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                     <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
                     <g id="SVGRepo_iconCarrier">
@@ -59,11 +81,27 @@
     </div>
 </div>
 
+<?php
+    $helper = $this->helper('Leeto\TicketLiveChat\Helper\Data');
+    $getUsersUrl =  $block->getFullUrl('leeto_support/chat/getusers');
+    $updateChatHeaderUrl =  $block->getFullUrl('leeto_support/chat/updatechatheader');
+    $updateUnreadChatMessages = $block->getFullUrl('leeto_support/chat/updateunreadmessages');
+    $userAvatarImagePath = $helper->getUserAvatarImagePath();
+    $webBaseUrl = substr($helper->getWebBaseUrl(), strpos($helper->getWebBaseUrl(), "//") + 2, -1);
+    $webSocketPort = $helper->getWebsocketPort();
+?>
+
 <script type="text/x-magento-init">
 {
-   "#chat-admin-container": { 
-       "Leeto_TicketLiveChat/js/list": {
-       } 
-   }
+    "#chat-admin-container": { 
+        "Leeto_TicketLiveChat/js/chat/list": {
+            "getUsersUrl": "<?= $getUsersUrl ?>",
+            "updateChatHeaderUrl": "<?= $updateChatHeaderUrl ?>",
+            "updateUnreadChatMessages": "<?= $updateUnreadChatMessages ?>",
+            "userAvatarImagePath": "<?= $userAvatarImagePath ?>",
+            "webBaseUrl": "<?= $webBaseUrl ?>",
+            "webSocketPort": "<?= $webSocketPort ?>"
+        } 
+    }
 } 
 </script>

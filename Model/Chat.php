@@ -69,4 +69,55 @@ class Chat extends AbstractModel implements ChatInterface
     {
         return $this->setData(self::STATUS_ID, $statusId);
     }
+
+    /**
+     * @return string|null
+     */
+    public function getCustomerId()
+    {
+        return $this->getData(self::CUSTOMER_ID);
+    }
+
+    /**
+     * @param $customerId
+     * @return $this
+     */
+    public function setCustomerId($customerId)
+    {
+        return $this->setData(self::CUSTOMER_ID, $customerId);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getEmail()
+    {
+        return $this->getData(self::EMAIL);
+    }
+
+    /**
+     * @param $email
+     * @return $this
+     */
+    public function setEmail($email)
+    {
+        return $this->setData(self::EMAIL, $email);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getUuid()
+    {
+        return $this->getData(self::UUID);
+    }
+
+    /**
+     * @param $uuid
+     * @return $this
+     */
+    public function setUuid($uuid)
+    {
+        return $this->setData(self::UUID, $uuid);
+    }
 }

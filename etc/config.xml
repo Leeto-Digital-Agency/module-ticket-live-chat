@@ -7,5 +7,12 @@
                     <order_type_ticket>2</order_type_ticket>
                 </ticket>
             </support>
+            <live_chat>
+                <settings>
+                    <ongoing_chat_status>1</ongoing_chat_status>
+                    <closed_chat_status>2</closed_chat_status>
+                    <websocket_port>8000</websocket_port>
+                </settings>
+            </live_chat>
         </default>
     </config>

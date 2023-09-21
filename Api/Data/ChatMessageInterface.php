@@ -14,10 +14,10 @@ interface ChatMessageInterface
     public const CHAT_ID = 'chat_id';
     public const IS_ADMIN = 'is_admin';
     public const MESSAGE = 'message';
-    public const EMAIL = 'email';
     public const CHATMESSAGE_ID = 'message_id';
     public const ATTACHMENT_ID = 'attachment_id';
-    public const FROM_ID = 'from_id';
+    public const IS_READ = 'is_read';
+    public const CREATED_AT = 'created_at';
 
     /**
      * Get message_id
@@ -46,19 +46,6 @@ interface ChatMessageInterface
     public function setChatId($chatId);
 
     /**
-     * Get from_id
-     * @return string|null
-     */
-    public function getFromId();
-
-    /**
-     * Set from_id
-     * @param string $fromId
-     * @return \Leeto\TicketLiveChat\ChatMessage\Api\Data\ChatMessageInterface
-     */
-    public function setFromId($fromId);
-
-    /**
      * Get is_admin
      * @return string|null
      */
@@ -70,19 +57,6 @@ interface ChatMessageInterface
      * @return \Leeto\TicketLiveChat\ChatMessage\Api\Data\ChatMessageInterface
      */
     public function setIsAdmin($isAdmin);
-
-    /**
-     * Get email
-     * @return string|null
-     */
-    public function getEmail();
-
-    /**
-     * Set email
-     * @param string $email
-     * @return \Leeto\TicketLiveChat\ChatMessage\Api\Data\ChatMessageInterface
-     */
-    public function setEmail($email);
 
     /**
      * Get message
@@ -109,4 +83,30 @@ interface ChatMessageInterface
      * @return \Leeto\TicketLiveChat\ChatMessage\Api\Data\ChatMessageInterface
      */
     public function setAttachmentId($attachmentId);
+
+    /**
+     * Set is_read
+     * @param string $isRead
+     * @return \Leeto\TicketLiveChat\ChatMessage\Api\Data\ChatMessageInterface
+     */
+    public function setIsRead($isRead);
+
+    /**
+     * Get is_read
+     * @return string|null
+     */
+    public function getIsRead();
+
+    /**
+     * Set created_at
+     * @param string $createdAt
+     * @return \Leeto\TicketLiveChat\ChatMessage\Api\Data\ChatMessageInterface
+     */
+    public function setCreatedAt($createdAt);
+    
+    /**
+     * Get attachment_id
+     * @return string|null
+     */
+    public function getCreatedAt();
 }
