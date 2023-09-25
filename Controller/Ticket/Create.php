@@ -206,17 +206,17 @@ class Create extends Action
                 $chatData = [
                     'ticket_id' => $ticket->getId(),
                     'status_id' => $this->chatStatusHelper->getOnGoingStatusId(),
+                    'email' => $data['email']
                 ];
                 $chat = $this->chatFactory->create();
                 $chat->setData($chatData)->save();
 
+                $chatMessageId = $this->createAndSaveMessage(
+                    $chat->getId(),
+                    $data['description'],
+                );
                 // Create Chat Message
                 if ($files[0]['name']) {
-                    $chatMessageId = $this->createAndSaveMessage(
-                        $chat->getId(),
-                        $data['email'],
-                        $data['description'],
-                    );
                     foreach ($files as $attachmentInfo) {
                         // Generate a unique name for the file
                         $uniqueFileName = uniqid() . '_' . $attachmentInfo['name'];
@@ -248,12 +248,6 @@ class Create extends Action
                         ];
                         $chatMessageAttachmentModel->setData($chatMessageAttachmentData)->save();
                     }
-                } else {
-                    $this->createAndSaveMessage(
-                        $chat->getId(),
-                        $data['email'],
-                        $data['description'],
-                    );
                 }
 
                 $resultPage = $this->resultFactory->create(ResultFactory::TYPE_PAGE);
@@ -310,13 +304,11 @@ class Create extends Action
     /**
      * Create and save messages
      */
-    public function createAndSaveMessage($chatId, $email, $message = null, $attachmentId = null)
+    public function createAndSaveMessage($chatId, $message = null, $attachmentId = null)
     {
         $messageData = [
             'chat_id' => $chatId,
-            'from_id' => true,
-            'is_admin' => null,
-            'email' => $email,
+            'is_admin' => false,
             'message' => $message,
             'attachment_id' => $attachmentId
         ];

@@ -153,14 +153,12 @@ class TicketStatusHelper extends AbstractHelper
         $chatModel = $this->chatFactory->create();
         $chat = $chatModel->load($ticket->getId(), 'ticket_id');
 
-        $chatMessageModel = $this->chatMessageFactory->create();
-        $chatMessage = $chatMessageModel->load($chat->getId(), 'chat_id');
-
         $statusLabel = $this->getStatusLabelById($statusId);
 
         $messageData = [
             'chat_id' => $chat->getId(),
-            'message' => 'Ticket status set to ' . $statusLabel . ' by admin'
+            'message' => 'Ticket status set to ' . $statusLabel . ' by admin',
+            'is_alert' => true
         ];
 
         try {

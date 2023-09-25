@@ -154,8 +154,6 @@ class TicketMessageHelper extends AbstractHelper
         $chatModel = $this->chatFactory->create();
         $chat = $chatModel->load($ticket->getId(), 'ticket_id');
 
-        $attachmentModel = $this->attachmentFactory->create();
-
         $messages = $this->chatMessageCollection->create()->addFieldToFilter(
             'chat_id',
             $chat->getId()
@@ -169,7 +167,7 @@ class TicketMessageHelper extends AbstractHelper
                 'message_id',
                 $message->getId()
             )->getItems();
-            if (!$message->getIsAdmin() && !$message->getFromId() && !$message->getEmail()) {
+            if ($message->getIsAlert()) {
                 $messageData['sender'] = null;
                 $messageData['alertMessage'] = $message->getMessage() ? $message->getMessage() : '';
                 $data[] = $messageData;
@@ -179,7 +177,7 @@ class TicketMessageHelper extends AbstractHelper
             $messageData['files'] = $this->getMessageAttachments($records);
             $messageData['message'] = $message->getMessage() ? $message->getMessage() : '';
             $messageData['defaultImage'] = $this->image->getDefaultPlaceholderUrl('image');
-            $messageData['userEmail'] = $message->getEmail();
+            $messageData['userEmail'] = $chat->getEmail();
             $messageData['subject'] = $ticket->getSubject();
             $data[] = $messageData;
         }
@@ -227,13 +225,13 @@ class TicketMessageHelper extends AbstractHelper
     /**
      * @return array
      */
-    public function addMessage($message, $ticketId, $fromUser = null, $fromAdmin = null, $filesData = [])
+    public function addMessage($message, $ticketId, $fromAdmin, $filesData = [])
     {
         $ticketModel = $this->ticketFactory->create();
         $ticket = $ticketModel->load($ticketId);
         $isTicketClosed = $this->ticketStatusHelper->getStatusIdByLabel('closed') == $ticket->getStatusId();
         if ($isTicketClosed) {
-            if (!$fromUser) {
+            if ($fromAdmin) {
                 return [
                     'error' => 'true',
                     'message' => 'This ticket is closed.'
@@ -243,22 +241,13 @@ class TicketMessageHelper extends AbstractHelper
         $chatModel = $this->chatFactory->create();
         $chat = $chatModel->load($ticket->getId(), 'ticket_id');
 
-        $chatMessageModel = $this->chatMessageFactory->create();
-        $chatMessage = $chatMessageModel->load($chat->getId(), 'chat_id');
-
         $messageData = [
             'chat_id' => $chat->getId(),
-            'email' => $chatMessage->getEmail(),
+            'is_admin' => $fromAdmin ? true : false,
             'message' => $message,
             'attachment_id' => null
         ];
-        if ($fromUser) {
-            $messageData['from_id'] = $fromUser;
-            $messageData['is_admin'] = null;
-        } elseif ($fromAdmin) {
-            $messageData['from_id'] = null;
-            $messageData['is_admin'] = true;
-        }
+       
         try {
             $newMessage = $this->chatMessageFactory->create();
             $newMessage->setData($messageData)->save();
@@ -319,7 +308,7 @@ class TicketMessageHelper extends AbstractHelper
         )->setOrder('message_id', 'DESC')
         ->getFirstItem();
 
-        return $latestMessage->getFromId() != null;
+        return !$latestMessage->getIsAdmin();
     }
 
     /**
@@ -358,12 +347,10 @@ class TicketMessageHelper extends AbstractHelper
         $chatModel = $this->chatFactory->create();
         $chat = $chatModel->load($ticket->getId(), 'ticket_id');
 
-        $chatMessageModel = $this->chatMessageFactory->create();
-        $chatMessage = $chatMessageModel->load($chat->getId(), 'chat_id');
-
         $messageData = [
             'chat_id' => $chat->getId(),
-            'message' => 'Ticket reopened by user'
+            'message' => 'Ticket reopened by user',
+            'is_alert' => true
         ];
 
         try {

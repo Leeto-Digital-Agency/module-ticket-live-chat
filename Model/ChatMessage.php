@@ -117,6 +117,23 @@ class ChatMessage extends AbstractModel implements ChatMessageInterface
     /**
      * @return string|null
      */
+    public function getIsAlert()
+    {
+        return $this->getData(self::IS_ALERT);
+    }
+
+    /**
+     * @param $isAlert
+     * @return Leeto\TicketLiveChat\Api\Data\ChatMessageInterface
+     */
+    public function setIsAlert($isAlert)
+    {
+        return $this->setData(self::IS_ALERT, $isAlert);
+    }
+
+    /**
+     * @return string|null
+     */
     public function getCreatedAt()
     {
         return $this->getData(self::CREATED_AT);

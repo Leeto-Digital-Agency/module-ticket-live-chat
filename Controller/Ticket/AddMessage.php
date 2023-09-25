@@ -110,7 +110,7 @@ class AddMessage extends Action
             $from = $ticketModel->getEmail();
         }
         try {
-            $data = $this->ticketMessageHelper->addMessage($message, $ticketId, $from, null, $filesData);
+            $data = $this->ticketMessageHelper->addMessage($message, $ticketId, false, $filesData);
         } catch (\Exception $e) {
             $result = $this->resultJsonFactory->create();
             return $result->setData(['error' => $e->getMessage()]);
