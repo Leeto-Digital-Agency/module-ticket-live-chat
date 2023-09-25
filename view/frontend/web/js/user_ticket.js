@@ -42,19 +42,41 @@ define([
                         responsive: true,
                         innerScroll: true,
                         title: "Do you want to reopen the ticket?",
-                        modalClass: "confirmation-modal"
+                        modalClass: "confirmation-modal",
+                        buttons: [
+                            {
+                                text: "Yes",
+                                class: "action-primary",
+                                click: function () {
+                                    self.reopenTicket(self.ticketId, function (event) {
+                                        self.handleSendMessage(event);
+                                    });
+                                    this.closeModal();
+                                }
+                            },
+                            {
+                                text: "No",
+                                class: "action-secondary",
+                                click: function () {
+                                    this.closeModal();
+                                }
+                            }
+                        ]
                     };
             
                     modal(options, self.confirmationModal);
             
                     self.confirmationModal.modal('openModal');
 
-                    $('#confirmButton').on('click', function() {
-                        self.reopenTicket(self.ticketId, function (event) {
-                            self.handleSendMessage(event);
-                        });
-                        self.confirmationModal.modal('closeModal');
-                    });
+                    // $('#confirmButton').on('click', function() {
+                    //     self.reopenTicket(self.ticketId, function (event) {
+                    //         self.handleSendMessage(event);
+                    //     });
+                    //     self.confirmationModal.modal('closeModal');
+                    // });
+                    // $('#cancelButton').on('click', function() {
+                    //     self.confirmationModal.modal('closeModal');
+                    // });
                 } else {
                     self.handleSendMessage(event);
                 }

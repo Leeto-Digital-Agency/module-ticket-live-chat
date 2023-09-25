@@ -143,12 +143,12 @@ define([
                 let tikcetUserDiv = $('<h3></h3>');
                 tikcetUserDiv.text(element.username);
                 ticketListTemplate.find('.user-details').append(tikcetUserDiv);
-                let lastMessageStatus = $('<p class="latest-message"></p>');
-                if (element.latestMessage.isAdmin) {
-                    lastMessageStatus.text('Sent');
+                let lastMessageStatus = $('<p class="latest-message"><span></span></p>');
+                if (element.latestMessage.isAdmin == 1) {
+                    lastMessageStatus.find('span').text('Sent');
                     lastMessageStatus.addClass('from-admin');
                 } else {
-                    lastMessageStatus.text(element.latestMessage.latest_message);
+                    lastMessageStatus.find('span').text(element.latestMessage.latest_message);
                     lastMessageStatus.addClass('from-customer');
                 }
                 if (parseInt(element.ticketId) == self.ticketId) {
@@ -223,7 +223,8 @@ define([
             var self = this;
 
             customerNameElement.text(data.customerName);
-            statusElement.find("[value='" + data.statusId + "'").removeAttr('selected');
+            statusElement.find("option").prop('selected', false); 
+            statusElement.find("[value='" + data.statusId + "']").prop('selected', true);
             statusElement.removeAttr('class');
             if (data.isOrder) {
                 orderLinkElement.find('.order-link-wrapper').show();
@@ -253,7 +254,6 @@ define([
                     statusElement.addClass('pending');
                 }
             }
-            statusElement.find("[value='" + data.statusId + "'").attr('selected', true);
         },
         handleSendMessage: async function (event) {
             this.clearErrorMessage();
@@ -437,11 +437,11 @@ define([
                     if (element.sender == 'admin') {
                         messageTemplate.find('.details .from').text("admin");
                         messageTemplate.find('.detailed-info .from').text("From: admin");
-                        messageTemplate.find('.detailed-info .to').text(element.userEmail);
+                        messageTemplate.find('.detailed-info .to').text('To: ' + element.userEmail);
                     } else if (element.sender == 'user') {
                         messageTemplate.find('.details .from').text(element.userEmail);
                         messageTemplate.find('.detailed-info .from').text("From: " + element.userEmail);
-                        messageTemplate.find('.detailed-info .to').text('admin');
+                        messageTemplate.find('.detailed-info .to').text('To: admin');
                     }
                     if (element.message) {
                         let messageDiv = $('<div class="chat-message"></div>');

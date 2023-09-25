@@ -87,7 +87,7 @@ class AddAdminMessage extends Action
                 return $result->setData($validation);
             }
             $isLatestMessageFromUser = $this->ticketMessageHelper->isLatestMessageFromUser($ticketId);
-            $data = $this->ticketMessageHelper->addMessage($message, $ticketId, null, true, $filesData);
+            $data = $this->ticketMessageHelper->addMessage($message, $ticketId, true, $filesData);
             if (isset($data['error'])) {
                 return $result->setData($data);
             }

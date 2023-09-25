@@ -51,6 +51,11 @@
     display: flex;
     justify-content: space-between;
 }
+@media only screen and (max-width: 576px) {
+    #ticket-user-container .chat-area .chat-header {
+        flex-direction: column;
+    }
+}
 #ticket-user-container .chat-area .chat-header .left-info {
     max-width: 70%;
 }
@@ -233,13 +238,21 @@
     width: 500px;
 }
 .confirmation-modal .modal-content {
+    display: none!important;
+}
+.confirmation-modal .modal-title {
+    border-bottom: 0px!important;
+}
+.confirmation-modal .modal-footer {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+.confirmation-modal .modal-content {
     padding: 0;
     display: flex;
     gap: 15px;
     padding: 15px 30px;
-}
-.confirmation-modal .modal-inner-wrap .modal-footer {
-    display: none;
 }
 @keyframes spin {
     0% { transform: rotate(0deg); }

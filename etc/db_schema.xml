@@ -191,6 +191,7 @@
 		<column name="message" nullable="true" xsi:type="text" comment="message"/>
 		<column name="attachment_id"  xsi:type="int" comment="attachment_id" identity="false" unsigned="true"/>
 		<column name="is_read" nullable="true" xsi:type="smallint" comment="Is Read" identity="false" unsigned="true" default="0" />
+		<column name="is_alert" nullable="true" xsi:type="smallint" comment="Is Alert" identity="false" unsigned="true" default="0" />
 		<column xsi:type="timestamp" name="created_at" on_update="false" nullable="false" default="CURRENT_TIMESTAMP"
                 comment="Creation Time"/>
         <column xsi:type="timestamp" name="updated_at" on_update="true" nullable="false" default="CURRENT_TIMESTAMP"
