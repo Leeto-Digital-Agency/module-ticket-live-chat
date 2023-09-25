@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <update handle="customer_account"/>
+	<head>
+		<css src="Leeto_TicketLiveChat::css/account_ticket.css" />
+	</head>
+	<body>
+        <referenceContainer name="content">
+			<block name="account_ticket_list" class="Leeto\TicketLiveChat\Block\Ticket\AccountTicket" template="Leeto_TicketLiveChat::ticket/list.phtml">
+                <container name="account.tickets.list" as="account_tickets_list"/>
+			</block>
+            <block class="Magento\Customer\Block\Account\Dashboard" name="customer.account.link.back" template="Magento_Customer::account/link/back.phtml" cacheable="false"/>
+		</referenceContainer>
+	</body>
+</page>

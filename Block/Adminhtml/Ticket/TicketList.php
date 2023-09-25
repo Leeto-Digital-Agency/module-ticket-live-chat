@@ -6,15 +6,13 @@ use Magento\Backend\Block\Template;
 use Magento\Backend\Block\Template\Context;
 use Leeto\TicketLiveChat\Api\TicketRepositoryInterface;
 use Magento\Framework\Api\SearchCriteriaBuilderFactory;
-use Magento\Eav\Model\Entity\Attribute;
 use Leeto\TicketLiveChat\Model\TicketFactory;
-use Leeto\TicketLiveChat\Model\ResourceModel\Ticket\Collection as TicketCollection;
 use Magento\Catalog\Helper\Image;
 use Magento\Customer\Model\Customer;
 use Leeto\TicketLiveChat\Model\Chat;
-use Leeto\TicketLiveChat\Model\ChatMessage;
 use Leeto\TicketLiveChat\Model\ResourceModel\ChatMessage\CollectionFactory as ChatMessageCollection;
 use Leeto\TicketLiveChat\Helper\Ticket\TicketStatusHelper;
+use Magento\Framework\Api\SortOrderBuilder;
 
 class TicketList extends Template
 {
@@ -29,19 +27,9 @@ class TicketList extends Template
     protected $searchCriteriaBuilderFactory;
 
     /**
-     * @var Attribute
-     */
-    protected $entityAttribute;
-
-    /**
      * @var TicketFactory
      */
     protected $ticket;
-
-    /**
-     * @var TicketCollection
-     */
-    protected $ticketCollection;
 
     /**
      * @var Image
@@ -59,11 +47,6 @@ class TicketList extends Template
     protected $chatModel;
 
     /**
-     * @var ChatMessage
-     */
-    protected $chatMessageModel;
-
-    /**
      * @var ChatMessageCollection
      */
     protected $chatMessageCollection;
@@ -74,53 +57,53 @@ class TicketList extends Template
     protected $ticketStatusHelper;
 
     /**
+     * @var SortOrderBuilder
+     */
+    protected $sortOrderBuilder;
+
+    /**
      * @param Context                           $context
      * @param array                             $data
      * @param TicketRepositoryInterface         $ticketRepositoryInterface
      * @param SearchCriteriaBuilderFactory      $searchCriteriaBuilderFactory
-     * @param Attribute                         $entityAttribute
      * @param TicketFactory                     $ticket
-     * @param TicketCollection                  $ticketCollection
      * @param Image                             $imageHelper
      * @param Customer                          $customerModel
      * @param Chat                              $chatModel
-     * @param ChatMessage                       $chatMessageModel
      * @param ChatMessageCollection             $chatMessageCollection
      * @param TicketStatusHelper                $ticketStatusHelper
+     * @param SortOrderBuilder                  $sortOrderBuilder
      */
     public function __construct(
         Context                             $context,
         TicketRepositoryInterface           $ticketRepositoryInterface,
         SearchCriteriaBuilderFactory        $searchCriteriaBuilderFactory,
-        Attribute                           $entityAttribute,
         TicketFactory                       $ticket,
-        TicketCollection                    $ticketCollection,
         Image                               $imageHelper,
         Customer                            $customerModel,
         Chat                                $chatModel,
-        ChatMessage                         $chatMessageModel,
         ChatMessageCollection               $chatMessageCollection,
         TicketStatusHelper                  $ticketStatusHelper,
-        array                        $data = []
+        SortOrderBuilder                    $sortOrderBuilder,
+        array                               $data = []
     ) {
         $this->ticketRepositoryInterface = $ticketRepositoryInterface;
         $this->searchCriteriaBuilderFactory = $searchCriteriaBuilderFactory;
-        $this->entityAttribute = $entityAttribute;
         $this->ticket = $ticket;
-        $this->ticketCollection = $ticketCollection;
         $this->imageHelper = $imageHelper;
         $this->customerModel = $customerModel;
         $this->chatModel = $chatModel;
-        $this->chatMessageModel = $chatMessageModel;
         $this->chatMessageCollection = $chatMessageCollection;
         $this->ticketStatusHelper = $ticketStatusHelper;
+        $this->sortOrderBuilder = $sortOrderBuilder;
         parent::__construct($context, $data);
     }
 
     public function getTickets()
     {
+        $sortOrder = $this->sortOrderBuilder->setField('created_at')->setDirection('DESC')->create();
         $searchCriteriaBuilder = $this->searchCriteriaBuilderFactory->create();
-        $searchCriteria = $searchCriteriaBuilder->create();
+        $searchCriteria = $searchCriteriaBuilder->setSortOrders([$sortOrder])->create();
         $tickets = [];
         foreach ($this->ticketRepositoryInterface->getList($searchCriteria)->getItems() as $ticket) {
             $ticketModel = $this->ticket->create();
@@ -151,7 +134,6 @@ class TicketList extends Template
      */
     public function getLatestMessageData($ticketId)
     {
-        //get chat by ticket id
         $chatId = $this->chatModel->load($ticketId, 'ticket_id')->getId();
         $latestMessage = $this->chatMessageCollection->create()->addFieldToFilter(
             'chat_id',
@@ -193,17 +175,17 @@ class TicketList extends Template
     /**
      * @return string
      */
-    public function getAddAdminFileControllerUrl()
+    public function getChangeTicketStatusControllerUrl()
     {
-        return $this->_urlBuilder->getUrl('leeto_support/ticket/addfilemessage');
+        return $this->_urlBuilder->getUrl('leeto_support/ticket/changeticketstatus');
     }
 
     /**
      * @return string
      */
-    public function getChangeTicketStatusControllerUrl()
+    public function getShowTicketsByStatusUrl()
     {
-        return $this->_urlBuilder->getUrl('leeto_support/ticket/changeticketstatus');
+        return $this->_urlBuilder->getUrl('leeto_support/ticket/showticketsbystatus');
     }
 
     /**

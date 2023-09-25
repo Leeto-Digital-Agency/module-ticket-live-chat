@@ -112,7 +112,7 @@ $differentEmail = 2;
             <label>
                 <textarea name="description" rows="4"
                     required='true'
-                    ><?= isset($formInput['description']) ? $this->escapeHtml($formInput['description']) : '' ?></textarea>
+                ><?= isset($formInput['description']) ? $this->escapeHtml($formInput['description']) : '' ?></textarea>
             </label>
             <?php if ($block->getTicketFormDataErrors('description')): ?>
                 <div class="field-error">
@@ -195,9 +195,11 @@ $differentEmail = 2;
                 <div id="uploaded-file-names">
                     <?= $this->escapeHtml(__('Uploaded Files:')) ?> 
                         <span id="uploaded-files-list">
-                            <?= implode(', ', (isset($formInput['uploaded_file_names']) &&
+                            <?= $escaper->escapeHtml(
+                                implode(', ', (isset($formInput['uploaded_file_names']) &&
                                 $this->escapeHtml($formInput['uploaded_file_names'])) ?
-                                $this->escapeHtml($formInput['uploaded_file_names']) : []) ?>
+                                $this->escapeHtml($formInput['uploaded_file_names']) : [])
+                            );?>
                         </span>
                 </div>
             </div>

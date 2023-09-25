@@ -68,7 +68,7 @@ define([
                         var allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
                         var files = fileInput[0].files;
 
-                        var maxFileSize = 15 * 1024 * 1024;
+                        var maxFileSize = 15 * 1024 * 1024; // 15 MB in bytes
                         var totalFileSize = 0;
                         
                         if (files.length > 5) {

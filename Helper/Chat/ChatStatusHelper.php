@@ -71,9 +71,9 @@ class ChatStatusHelper extends AbstractHelper
     public function getOnGoingStatusId()
     {
         $labelFilter = $this->filterBuilder
-            ->setField('label') // Change this to the actual field name in your table
+            ->setField('label')
             ->setConditionType('like')
-            ->setValue('%ongoing%') // Change this value according to your needs
+            ->setValue('%ongoing%')
             ->create();
         $searchCriteria = $this->searchCriteriaInterface
             ->addFilters([$labelFilter])

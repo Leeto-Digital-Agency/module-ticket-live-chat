@@ -7,7 +7,6 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\View\Result\PageFactory;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Session\SessionManagerInterface;
-use Magento\Framework\File\UploaderFactory;
 use Magento\Framework\Filesystem;
 use Leeto\TicketLiveChat\Helper\Ticket\TicketTypeHelper;
 use Leeto\TicketLiveChat\Model\TicketFactory;
@@ -18,6 +17,7 @@ use Magento\Customer\Model\Session;
 use Leeto\TicketLiveChat\Helper\Ticket\TicketStatusHelper;
 use Magento\Sales\Model\Order;
 use Leeto\TicketLiveChat\Helper\Chat\ChatStatusHelper;
+use Leeto\TicketLiveChat\Model\ChatMessageAttachmentFactory;
 
 class Create extends Action
 {
@@ -30,11 +30,6 @@ class Create extends Action
      * @var SessionManagerInterface
      */
     protected $sessionManager;
-
-    /**
-     * @var UploaderFactory
-     */
-    protected $uploaderFactory;
 
     /**
      * @var Filesystem
@@ -87,26 +82,30 @@ class Create extends Action
     protected $chatStatusHelper;
 
     /**
-     * @param Context                 $context
-     * @param SessionManagerInterface $sessionManager
-     * @param PageFactory             $resultPageFactory
-     * @param UploaderFactory         $uploaderFactory
-     * @param Filesystem              $filesystem
-     * @param TicketTypeHelper        $ticketTypeHelper
-     * @param TicketFactory           $ticketFactory
-     * @param ChatFactory             $chatFactory
-     * @param MessageFactory          $messageFactory
-     * @param AttachmentFactory       $attachmentFactory
-     * @param Session                 $customerSession
-     * @param TicketStatusHelper      $ticketStatusHelper
-     * @param Order                   $orderModel
-     * @param ChatStatusHelper        $chatStatusHelper
+     * @var ChatMessageAttachmentFactory
+     */
+    protected $chatMessageAttachmentFactory;
+
+    /**
+     * @param Context                       $context
+     * @param SessionManagerInterface       $sessionManager
+     * @param PageFactory                   $resultPageFactory
+     * @param Filesystem                    $filesystem
+     * @param TicketTypeHelper              $ticketTypeHelper
+     * @param TicketFactory                 $ticketFactory
+     * @param ChatFactory                   $chatFactory
+     * @param MessageFactory                $messageFactory
+     * @param AttachmentFactory             $attachmentFactory
+     * @param Session                       $customerSession
+     * @param TicketStatusHelper            $ticketStatusHelper
+     * @param Order                         $orderModel
+     * @param ChatStatusHelper              $chatStatusHelper
+     * @param ChatMessageAttachmentFactory  $chatMessageAttachmentFactory
      */
     public function __construct(
         Context $context,
         SessionManagerInterface $sessionManager,
         PageFactory $resultPageFactory,
-        UploaderFactory $uploaderFactory,
         Filesystem $filesystem,
         TicketTypeHelper $ticketTypeHelper,
         TicketFactory $ticketFactory,
@@ -116,12 +115,12 @@ class Create extends Action
         Session $customerSession,
         TicketStatusHelper $ticketStatusHelper,
         Order $orderModel,
-        ChatStatusHelper $chatStatusHelper
+        ChatStatusHelper $chatStatusHelper,
+        ChatMessageAttachmentFactory $chatMessageAttachmentFactory
     ) {
         parent::__construct($context);
         $this->sessionManager = $sessionManager;
         $this->resultPageFactory = $resultPageFactory;
-        $this->uploaderFactory = $uploaderFactory;
         $this->filesystem = $filesystem;
         $this->ticketTypeHelper = $ticketTypeHelper;
         $this->ticketFactory = $ticketFactory;
@@ -132,6 +131,7 @@ class Create extends Action
         $this->ticketStatusHelper = $ticketStatusHelper;
         $this->orderModel = $orderModel;
         $this->chatStatusHelper = $chatStatusHelper;
+        $this->chatMessageAttachmentFactory = $chatMessageAttachmentFactory;
     }
 
     public function execute()
@@ -175,11 +175,11 @@ class Create extends Action
                     return $this->_redirect('*/*/');
                 }
 
-                $isLoggedIn = $this->customerSession->getCustomerId();
+                $customerId = $this->customerSession->getCustomerId();
                 // Create Ticket
                 $ticketData = [
                     'subject' => $data['subject'],
-                    'customer_id' => $isLoggedIn ? $isLoggedIn : null,
+                    'customer_id' => $customerId ? $customerId : null,
                     'ticket_type_id' => $data['ticket_type'],
                     'status_id' => $this->ticketStatusHelper->getStatusIdByLabel('opened'),
                     'email' => $data['email']
@@ -188,7 +188,10 @@ class Create extends Action
                 if ($data['ticket_type'] == $orderTypeId) {
                     $orderIncrementId = $data['increment_id'];
                     $order = $this->orderModel->loadByIncrementId($orderIncrementId);
-                    if (!$order->getId()) {
+                    if (!$order->getId() ||
+                        ($order->getCustomerId() && !$customerId) ||
+                        ($order->getCustomerId() != $customerId)
+                    ) {
                         $this->messageManager->addErrorMessage(__("Please provide a valid order."));
                         $this->sessionManager->setFormData($data);
                         $this->sessionManager->setFormDataError($errors);
@@ -209,9 +212,8 @@ class Create extends Action
 
                 // Create Chat Message
                 if ($files[0]['name']) {
-                    $this->createAndSaveMessage(
+                    $chatMessageId = $this->createAndSaveMessage(
                         $chat->getId(),
-                        $isLoggedIn,
                         $data['email'],
                         $data['description'],
                     );
@@ -238,19 +240,17 @@ class Create extends Action
                         ];
                         $attachment = $this->attachmentFactory->create();
                         $attachment->setData($attachmentData)->save();
-                        // Create Chat Message
-                        $this->createAndSaveMessage(
-                            $chat->getId(),
-                            $isLoggedIn,
-                            $data['email'],
-                            null,
-                            $attachment->getId()
-                        );
+
+                        $chatMessageAttachmentModel = $this->chatMessageAttachmentFactory->create();
+                        $chatMessageAttachmentData = [
+                            'message_id' => $chatMessageId,
+                            'attachment_id' => $attachment->getId()
+                        ];
+                        $chatMessageAttachmentModel->setData($chatMessageAttachmentData)->save();
                     }
                 } else {
                     $this->createAndSaveMessage(
                         $chat->getId(),
-                        $isLoggedIn,
                         $data['email'],
                         $data['description'],
                     );
@@ -310,11 +310,11 @@ class Create extends Action
     /**
      * Create and save messages
      */
-    public function createAndSaveMessage($chatId, $isLoggedIn, $email, $message = null, $attachmentId = null)
+    public function createAndSaveMessage($chatId, $email, $message = null, $attachmentId = null)
     {
         $messageData = [
             'chat_id' => $chatId,
-            'from_id' => $isLoggedIn ? $isLoggedIn : null,
+            'from_id' => true,
             'is_admin' => null,
             'email' => $email,
             'message' => $message,
@@ -322,5 +322,6 @@ class Create extends Action
         ];
         $message = $this->messageFactory->create();
         $message->setData($messageData)->save();
+        return $message->getId();
     }
 }

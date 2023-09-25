@@ -1,15 +1,6 @@
 <?php
 
-/**
- * Copyright © Leeto All rights reserved.
- * See COPYING.txt for license details.
- */
-
-declare(strict_types=1);
-
 namespace Leeto\TicketLiveChat\Api;
-
-use Magento\Framework\Api\SearchCriteriaInterface;
 
 interface ChatStatusRepositoryInterface
 {

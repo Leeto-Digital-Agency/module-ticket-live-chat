@@ -1,12 +1,5 @@
 <?php
 
-/**
- * Copyright © TicketLiveChat All rights reserved.
- * See COPYING.txt for license details.
- */
-
-declare(strict_types=1);
-
 namespace Leeto\TicketLiveChat\Setup\Patch\Data;
 
 use Leeto\TicketLiveChat\Setup\TicketSetup;
@@ -26,7 +19,7 @@ class DefaultTicketEntity implements DataPatchInterface
     private $ticketSetupFactory;
 
     /**
-     * Constructor
+     * Construct
      *
      * @param ModuleDataSetupInterface $moduleDataSetup
      * @param TicketSetupFactory $ticketSetupFactory
