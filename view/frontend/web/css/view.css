@@ -1,0 +1,247 @@
+#ticket-user-container {
+    display: flex;
+    height: 67vh;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    position: relative;
+}
+#ticket-user-container .chats-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 16px;
+    align-items: center;
+    border-radius: 5px;
+}
+#ticket-user-container .chats-info p {
+    margin: 0;
+}
+#ticket-user-container .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 50%;
+    right: 50%;
+    z-index: 10;
+}
+#ticket-user-container .loading-circle {
+    border: 4px solid #3498db;
+    border-top: 4px solid transparent;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 2s linear infinite;
+}
+#ticket-user-container .chat-area {
+    width: 100%;
+    display: none;
+    flex-direction: column;
+    position: relative;
+}
+#ticket-user-container .chat-area .error-message {
+    color: red;
+    padding: 10px 0 0px 31px;
+}
+#ticket-user-container .chat-area .chat-header {
+    padding: 20px;
+    border-bottom: 1px solid #e1e1e1;
+    background-color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+}
+#ticket-user-container .chat-area .chat-header .left-info {
+    max-width: 70%;
+}
+#ticket-user-container .chat-area .chat-header .right-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+#ticket-user-container .chat-area .chat-header .left-info .ticket-type,
+#ticket-user-container .chat-area .chat-header .left-info .ticket-customer,
+#ticket-user-container .chat-area .chat-header .left-info .ticket-subject {
+    font-size: 18px;
+}
+#ticket-user-container .chat-area .chat-header .left-info .ticket-type .title,
+#ticket-user-container .chat-area .chat-header .left-info .ticket-customer .title,
+#ticket-user-container .chat-area .chat-header .left-info .ticket-subject .title {
+    font-weight: 600;
+    font-size: 20px;
+}
+#ticket-user-container .chat-area .chat-header .right-info .ticket-date,
+#ticket-user-container .chat-area .chat-header .right-info .ticket-status {
+    font-size: 18px;
+}
+#ticket-user-container .chat-area .chat-header .right-info .ticket-date .title,
+#ticket-user-container .chat-area .chat-header .right-info .ticket-status .title {
+    font-weight: 600;
+    font-size: 20px;
+}
+#ticket-user-container .chat-area .chat-header .right-info .ticket-status .active {
+    color: green;
+}
+#ticket-user-container .chat-area .chat-header .right-info .ticket-status .pending {
+    color: rgb(179, 179, 15);
+}
+#ticket-user-container .chat-area .chat-header .right-info .ticket-status .closed {
+    color: red;
+}
+#ticket-user-container .chat-area .chat-messages {
+    flex: 1;
+    padding: 20px;
+    background-color: #ffffff;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+#ticket-user-container .chat-area .chat-messages .ticket-message {
+    transition: all 1px ease-out;
+    border-bottom: 1px solid rgb(239 239 239);
+}
+#ticket-user-container .chat-area .chat-messages .alert-message {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0px;
+    background-color: rgb(226, 227, 229);
+}
+#ticket-user-container .chat-area .chat-messages .alert-message.info {
+    color: rgb(95 98 101);
+}
+#ticket-user-container .chat-area .chat-messages .ticket-message .dropdown-item {
+    display: flex;
+    gap: 10px;
+    cursor: pointer;
+    padding: 10px;
+}
+#ticket-user-container .chat-area .chat-messages .ticket-message .icon .avatar img {
+    max-width: 50px;
+    max-height: 50px;
+    border-radius: 50%;
+}
+#ticket-user-container .chat-area .chat-messages .ticket-message .files {
+    display: flex;
+    gap: 10px;
+}
+#ticket-user-container .chat-area .chat-messages .ticket-message .file-content .file-image {
+    height: 100%;
+    display: block;
+}
+#ticket-user-container .chat-area .chat-messages .ticket-message .file-content .file-image .file-name {
+    max-width: 200px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+#ticket-user-container .chat-area .chat-messages .ticket-message .file-content .file-image .image {
+    max-height: 100px;
+    max-width: 200px;
+}
+#ticket-user-container .chat-area .chat-messages .detailed-info {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+}
+#ticket-user-container .chat-area .chat-messages .detailed-info .from,
+#ticket-user-container .chat-area .chat-messages .detailed-info .to {
+    color: gray;
+}
+#ticket-user-container .chat-area .chat-messages .detailed-info.active .message {
+    padding: 10px 0 50px;
+}
+#ticket-user-container .chat-area .chat-input {
+    padding: 20px 20px 0 20px;
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-top: 1px solid #e1e1e1;
+}
+#ticket-user-container .chat-area .chat-input .textarea-wrapper {
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+#ticket-user-container .chat-area .chat-input textarea {
+    height: 80px;
+    max-height:  150px;
+    flex: 1;
+    padding: 10px;
+    border-radius: 5px;
+    resize: none;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+#ticket-user-container .chat-area .chat-input button {
+    padding: 10px 20px;
+    margin-left: 10px;
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    height: 40px;
+}
+#ticket-user-container .chat-area .chat-input button:hover {
+    background-color: #0056b3;
+}
+#ticket-user-container .chat-area .chat-input .attach-icon {
+    width: 100%;
+    margin-left: 12px;
+    margin-top: 10px;
+    width: fit-content;
+    align-self: flex-start;
+}
+#ticket-user-container .chat-area .chat-input .attach-icon label {
+    cursor: pointer;
+}
+#ticket-user-container .chat-area .chat-messages .message-chat {
+    max-width: 80%;
+    word-wrap: break-word;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    border-radius: 10px;
+    padding: 8px 10px;
+}
+#ticket-user-container .chat-area .chat-messages .message-chat.admin {
+    background-color: #f5f5f5;
+    color: #333;
+    align-self: flex-start;
+}
+#ticket-user-container .chat-area .chat-messages .message-chat.admin .file-name {
+    color: #007bff;
+    text-decoration: underline;
+}
+#ticket-user-container .chat-area .chat-messages .message-chat .file-image {
+    max-height: 200px;
+}
+#ticket-user-container .chat-area .chat-messages .message-chat.user {
+    background-color: #007bff;
+    color: #ffffff;
+    align-self: flex-end;
+}
+#ticket-user-container .chat-area .chat-messages .message-chat.user .file-name {
+    color: #ffffff;
+    text-decoration: underline;
+}
+.confirmation-modal .modal-inner-wrap {
+    width: 500px;
+}
+.confirmation-modal .modal-content {
+    padding: 0;
+    display: flex;
+    gap: 15px;
+    padding: 15px 30px;
+}
+.confirmation-modal .modal-inner-wrap .modal-footer {
+    display: none;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

@@ -1,12 +1,5 @@
 <?php
 
-/**
- * Copyright © Leeto All rights reserved.
- * See COPYING.txt for license details.
- */
-
-declare(strict_types=1);
-
 namespace Leeto\TicketLiveChat\Block\Ticket;
 
 use Magento\Framework\View\Element\Template;
@@ -17,7 +10,6 @@ use Magento\Customer\Model\Session;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory as OrderCollectionFactory;
 use Leeto\TicketLiveChat\Helper\Ticket\TicketTypeHelper;
 use Magento\Framework\Session\SessionManagerInterface;
-use Magento\Framework\Message\ManagerInterface;
 
 class Form extends Template
 {
@@ -50,23 +42,18 @@ class Form extends Template
      * @var SessionManagerInterface
      */
     protected $sessionManagerInterface;
-
+    
     /**
-     * @var ManagerInterface
-     */
-    protected $messageManager;
-    /**
-     * Constructor
+     * Construct
      *
      * @param Context                       $context
      * @param array                         $data
      * @param TicketTypeRepository          $ticketTypeRepository
-     * @param SearchCriteriaBuilderFactory  $searchCriteriaInterface
+     * @param SearchCriteriaBuilderFactory  $searchCriteriaBuilderFactory
      * @param Session                       $customerSession
      * @param OrderCollectionFactory        $orderCollectionFactory
      * @param TicketTypeHelper              $ticketTypeHelper
      * @param SessionManagerInterface       $sessionManagerInterface
-     * @param ManagerInterface              $messageManager
      */
     public function __construct(
         Context                      $context,
@@ -76,7 +63,6 @@ class Form extends Template
         OrderCollectionFactory       $orderCollectionFactory,
         TicketTypeHelper             $ticketTypeHelper,
         SessionManagerInterface      $sessionManagerInterface,
-        ManagerInterface             $messageManager,
         array                        $data = [],
     ) {
         $this->ticketTypeRepository = $ticketTypeRepository;
@@ -85,7 +71,6 @@ class Form extends Template
         $this->orderCollectionFactory = $orderCollectionFactory;
         $this->ticketTypeHelper = $ticketTypeHelper;
         $this->sessionManagerInterface = $sessionManagerInterface;
-        $this->messageManager = $messageManager;
         parent::__construct($context, $data);
     }
 

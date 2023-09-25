@@ -1,0 +1,56 @@
+<?php
+/** @var Leeto\TicketLiveChat\Block\Ticket\AccountTicket $block */
+?>
+<?php
+    $tickets = $block->getUserTickets();
+?>
+<?= $block->getChildHtml('info') ?>
+<?php if ($tickets && count($tickets)): ?>
+    <div class="table-wrapper tickets-list">
+        <table class="data table table-order-items history" id="my-orders-table">
+            <caption class="table-caption"><?= $escaper->escapeHtml(__('Tickets')) ?></caption>
+            <thead>
+                <tr>
+                    <th scope="col" class="col date"><?= $escaper->escapeHtml(__('Date')) ?></th>
+                    <?= $block->getChildHtml('extra.column.header') ?>
+                    <th scope="col" class="col total"><?= $escaper->escapeHtml(__('Subject')) ?></th>
+                    <th scope="col" class="col status"><?= $escaper->escapeHtml(__('Status')) ?></th>
+                    <th scope="col" class="col actions"><?= $escaper->escapeHtml(__('Action')) ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($tickets as $ticket): ?>
+                    <tr>
+                        <td data-th="<?= $escaper->escapeHtml(__('Date')) ?>" 
+                            class="col date"><?= $escaper
+                                ->escapeHtml($block->formatDate($ticket->getCreatedAt())) ?>
+                        </td>
+                        <?php $extra = $block->getChildBlock('extra.container'); ?>
+                        <?php if ($extra): ?>
+                            <?php $extra->setOrder($ticket); ?>
+                            <?= $extra->getChildHtml() ?>
+                        <?php endif; ?>
+                        <td data-th="<?= $escaper->escapeHtml(__('Subject')) ?>" 
+                            class="col status"><?= $escaper->escapeHtml($ticket->getSubject()) ?></td>
+                        <?php $statusLabel = $block->getStatusLabelById($ticket->getStatusId()); ?>
+                        <td data-th="<?= $escaper->escapeHtml(__('Status')) ?>" 
+                            class="col status <?= $escaper->escapeHtml(strtolower($statusLabel)) ?>">
+                                <?= $escaper->escapeHtml($statusLabel) ?>
+                        </td>
+                        <td data-th="<?= $escaper->escapeHtml(__('Actions')) ?>" class="col actions">
+                            <a href="<?= $escaper
+                                ->escapeUrl($block->getViewTicketUrl($ticket->getId())) ?>" class="action view">
+                                <span><?= $escaper->escapeHtml(__('View Ticket')) ?></span>
+                            </a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php if ($block->getPagerHtml()): ?>
+        <div class="order-products-toolbar toolbar bottom"><?= $block->getPagerHtml() ?></div>
+    <?php endif ?>
+<?php else: ?>
+    <div class="message info empty"><span><?= $escaper->escapeHtml($block->getEmptyOrdersMessage()) ?></span></div>
+<?php endif ?>

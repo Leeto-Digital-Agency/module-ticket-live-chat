@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Email:etc/email_templates.xsd">
+    <template id="ticket_reply_template" label="Ticket Reply" file="ticket_reply.html" type="html" module="Leeto_TicketLiveChat" area="frontend"/>
+</config>

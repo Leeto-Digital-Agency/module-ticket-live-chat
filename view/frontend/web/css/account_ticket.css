@@ -1,0 +1,15 @@
+.tickets-list .status {
+    max-width: 50px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.tickets-list .status.opened {
+    color: green;
+}
+.tickets-list .status.closed {
+    color: red;
+}
+.tickets-list .status.pending {
+    color: rgb(179, 179, 15);
+}

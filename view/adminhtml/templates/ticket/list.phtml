@@ -1,54 +1,29 @@
 <?php
-$tickets = $this->getTickets();
+    $ticketStatuses = $block->getTicketStatuses();
 ?>
 <div id="ticket-admin-container">
     <div class="user-list-wrapper">
+        <div class="ticket-status-grouped">
+            <?php foreach ($ticketStatuses as $ticketStatus): ?>
+                <div class="status" 
+                    data-status-id="<?= $escaper->escapeHtml($ticketStatus['value']) ?>"
+                    ><?= $escaper->escapeHtml($ticketStatus['label']) ?></div>
+            <?php endforeach; ?>
+        </div>
         <div class="chats-info">
-            <p>My Chats</p>
-            <p>Total Chats: <span class="total-chats"><?= $escaper->escapeHtml(count($tickets)) ?></span></p>
+            <p class="tickets-count"></p>
         </div>
         <div class="user-list">
-            <?php foreach ($tickets as $ticket): ?>
-                <div class="user-item" data-ticket-id="<?= $escaper->escapeHTML($ticket->getId()) ?>">
-                    <div class="user-avatar">
-                        <img src="<?= $escaper->escapeHtml($this->getDefaultImage()) ?>" alt="Image Placeholder">
-                    </div>
-                    <?php
-                        $customer = $this->getCustomerById($ticket->getCustomerId());
-                    ?>
-                    <div class="user-details">
-                        <h3><?= $escaper->escapeHtml($customer->getFirstname() . ' ' . $customer->getLastname()) ?></h3>
-                        <?php
-                            $latestMessageData = $block->getLatestMessageData($ticket->getId());
-                        ?>
-                        <?php if ($latestMessageData['isAdmin']): ?>
-                            <p class="latest-message from-admin"><?= $escaper->escapeHtml(__("Sent")) ?></p>
-                        <?php else: ?>
-                            <p class="latest-message from-customer">
-                                <?= $escaper->escapeHtml($latestMessageData['latest_message']) ?>
-                            </p>
-                        <?php endif; ?>
-                    </div>
-                    <?php
-                        $ticketStatuses = $block->getTicketStatuses();
-                    ?>
-                    <div id="status-update">
-                        <select id="ticket-status">
-                            <?php foreach ($ticketStatuses as $status): ?>
-                                <option 
-                                    <?= $ticket->getStatusId() == $status['value'] ? 'selected' : '' ?> 
-                                    value="<?= $escaper->escapeHtml($status['value']) ?>">
-                                    <?= $escaper->escapeHtml($status['label']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-            <?php endforeach; ?>
+        </div>
+        <div class="loading-container">
+            <div class="loading-circle"></div>
         </div>
     </div>
     <h1 class="welcome-message" style="display: none;"></h1>
     <div class="chat-area">
+        <div class="loading-container">
+            <div class="loading-circle"></div>
+        </div>
         <div class="chat-header">
             <div class="left-info">
                 <div class="ticket-customer">
@@ -72,6 +47,16 @@ $tickets = $this->getTickets();
                 </div>
                 <div class="ticket-status">
                     <span class="title"><?= $escaper->escapeHtml(__('Status:')) ?></span>
+                    <div id="status-update">
+                        <select id="ticket-status-list">
+                            <?php foreach ($ticketStatuses as $status): ?>
+                                <option 
+                                    value="<?= $escaper->escapeHtml($status['value']) ?>">
+                                    <?= $escaper->escapeHtml($status['label']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
@@ -123,7 +108,14 @@ $tickets = $this->getTickets();
                     </g>
                     </svg>
                 </label>
-                <input type="file" id="file-input" style="display: none;">
+                <input type="file" id="file-input" name="attachments[]" 
+                    style="display: none;" accept=".jpg, .jpeg, .png, .pdf, .doc, .docx" multiple>
+                <div class="uploaded-files">
+                    <div id="uploaded-file-names">
+                        <?= $this->escapeHtml(__('Uploaded Files:')) ?> 
+                        <span id="uploaded-files-list"></span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -136,8 +128,9 @@ $tickets = $this->getTickets();
             "ticketControllerUrl": "<?= $escaper->escapeHtml($this->getTicketControllerUrl()) ?>",
             "messageControllerUrl": "<?= $escaper->escapeHtml($this->getMessageControllerUrl()) ?>",
             "addAdminMessageControllerUrl": "<?= $escaper->escapeHtml($this->getAddAdminMessageControllerUrl()) ?>",
-            "addFileMessageControllerUrl": "<?= $escaper->escapeHtml($this->getAddAdminFileControllerUrl()) ?>",
-            "changeTicketStatusControllerUrl": "<?= $escaper->escapeHtml($this->getChangeTicketStatusControllerUrl()) ?>"
+            "changeTicketStatusControllerUrl": "<?= $escaper
+                ->escapeHtml($this->getChangeTicketStatusControllerUrl()) ?>",
+            "showTicketsByStatusUrl": "<?= $escaper->escapeHtml($this->getShowTicketsByStatusUrl()) ?>"
         } 
    }
 } 
