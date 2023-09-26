@@ -1,5 +1,5 @@
 .d-none {
-    display: none;
+    display: none !important;
 }
 #chat-container {
     position: fixed;
@@ -313,6 +313,36 @@
 }
 #chat-container .email-input-section button:hover {
     background-color: #0051aa;
+}
+#chat-container .ticket-section {
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+#chat-container .ticket-section .ticket-wrapper {
+    padding: 0 20px;
+}
+#chat-container .ticket-section .ticket-wrapper .new-chat .ticket-input-label {
+    text-align: center;
+}
+#chat-container .ticket-section .ticket-wrapper .ongoing-chat .ticket-input-wrapper {
+    margin-bottom: 20px;
+}
+#chat-container .ticket-section .ticket-wrapper .ongoing-chat #ticket-error-message {
+    color: red;
+}
+#chat-container .ticket-section .ticket-wrapper .ongoing-chat .ticket-input-wrapper .options label {
+    margin-right: 8px;
+}
+#chat-container .ticket-section .ticket-wrapper .ongoing-chat #submit-ticket-button {
+    background-color: #0062cc;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease-in-out;
 }
 @media (max-width: 480px) {
     #chat-container .chat-popup {

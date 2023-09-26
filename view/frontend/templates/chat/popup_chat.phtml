@@ -1,15 +1,13 @@
 <?php
-
     $helper = $this->helper('Leeto\TicketLiveChat\Helper\Data');
     $loggedInUserId = $helper->getLoggedInUser() ? $helper->getLoggedInUser()->getId() : null;
     $supportAvatarImagePath = $helper->getSupportAvatarImagePath();
     $webBaseUrl = substr($helper->getWebBaseUrl(), strpos($helper->getWebBaseUrl(), "//") + 2, -1);
     $webSocketPort = $helper->getWebsocketPort();
 ?>
-
 <div id="chat-container">
     <button class="chat-button">
-        <div class="unread-messages-count d-none"></div>
+        <div class="unread-messages-count" style="display: none"></div>
         <div class="chat-button-wrapper">
             <span>
                 <svg width="26px" height="26px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -63,6 +61,43 @@
                 placeholder="<?= $escaper->escapeHtml(__('Enter your email')) ?>">
             <span id="email-error-message" style="display: none;"></span>
             <button id="continue-button"><?= $escaper->escapeHtml(__('Continue')) ?></button>
+        </div>
+        <div class="ticket-section" style="display: none;">
+            <div class="ticket-wrapper">
+                <div class="ongoing-chat">
+                    <div class="ticket-input-wrapper">
+                        <p class="ticket-input-label">
+                            <?= $escaper->escapeHtml(__('The administrator is currently unavailable; please create a support ticket to continue your issue:')) ?>
+                        </p>
+                        <div class="options">
+                            <input type="radio" name="ticket-status-choice" id="ticket-status-choice-1" value="1" checked>
+                            <label for="ticket-status-choice-1"><?= $escaper->escapeHtml(__('Yes')) ?></label>
+                            <input type="radio" name="ticket-status-choice" id="ticket-status-choice-2" value="2">
+                            <label for="ticket-status-choice-2"><?= $escaper->escapeHtml(__('No')) ?></label>
+                            <p id="ticket-error-message" style="display: none;"></p>
+                        </div>
+                    </div>
+                    <button id="submit-ticket-button"><?= $escaper->escapeHtml(__('Submit')) ?></button>
+                </div>
+                <div class="new-chat">
+                    <p class="ticket-input-label">
+                        <?php 
+                            $createTicketUrl = $this->getUrl('support/ticket/index');
+                        ?>
+                        <?= __('The administrator is currently unavailable; please create a support ticket
+                            %1here%2 to fix your issue.', '<a href="'. $createTicketUrl . '">', '</a>') 
+                        ?>
+                    </p>
+                    
+                </div>
+                <div class="thank-you-wrapper">
+                    <p class="thank-you-message"></p>
+                    <!-- <p class="ticket-id-message">
+                        <?php //echo $escaper->escapeHtml(__('Your ticket ID is:')) ?>
+                        <span class="ticket-id"></span>
+                    </p> -->
+                </div>
+            </div>
         </div>
         <div class="chat-wrapper">
             <div class="chat-messages">

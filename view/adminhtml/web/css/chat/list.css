@@ -206,17 +206,87 @@
 #chat-admin-container .chat-area .chat-header .right-info .chat-status {
     font-size: 18px;
 }
+#chat-admin-container .chat-area .chat-header .right-info .chat-status {
+    display: flex;
+    gap: 5px;
+}
 #chat-admin-container .chat-area .chat-header .right-info .chat-date .title,
 #chat-admin-container .chat-area .chat-header .right-info .chat-status .title {
     font-weight: 600;
     font-size: 20px;
 }
-#chat-admin-container .chat-area .chat-header .right-info .chat-status .active {
+#chat-admin-container .chat-area .chat-header .right-info .chat-status #status-update.active {
     color: green;
 }
-#chat-admin-container .chat-area .chat-header .right-info .chat-status .closed {
+#chat-admin-container .chat-area .chat-header .right-info .chat-status #status-update.closed {
     color: red;
 }
-#chat-admin-container .chat-area .chat-header .right-info .chat-status .pending {
+#chat-admin-container .chat-area .chat-header .right-info .chat-status #status-update.pending {
     color: rgb(238, 220, 63);
+}
+#chat-admin-container .chat-area #chat-status-list {
+    border: none;
+    background-color: transparent;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding: 0;
+    outline: none;
+    cursor: pointer;
+    border-bottom: 1px solid;
+}
+#chat-admin-container .chat-area #chat-status-list option {
+    border-bottom: 1px solid #000;
+    padding: 5px;
+    color: black;
+}
+#chat-admin-container .chat-area #chat-status-list:hover, #chat-admin-container .chat-area #chat-status-list:focus {
+    border: none;
+}
+#status-update-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    z-index: 1000; /* Make sure it's above other content */
+}
+/* Styles for the modal content */
+.modal-inner-wrapper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+    z-index: 1001; /* Make it appear above the overlay */
+}
+/* Styles for the modal title and content */
+.modal-title {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+.modal-content p {
+    font-size: 16px;
+}
+/* Styles for the modal buttons */
+.modal-actions {
+    margin-top: 20px;
+    text-align: center;
+}
+.modal-actions button {
+    margin: 0 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+}
+/* Close button (optional) */
+.modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 24px;
 }

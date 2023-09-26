@@ -14,6 +14,7 @@ use Leeto\TicketLiveChat\Api\AttachmentRepositoryInterface;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Leeto\TicketLiveChat\Helper\Data;
+use Leeto\TicketLiveChat\Helper\Chat\ChatStatusHelper;
 use Magento\Framework\Api\SortOrderBuilder;
 
 class GetUsers extends Action
@@ -71,6 +72,11 @@ class GetUsers extends Action
     protected $sortOrderBuilder;
 
     /**
+     * @var ChatStatusHelper
+     */
+    protected $chatStatusHelper;
+
+    /**
      * @param Context                        $context
      * @param ResultFactory                  $resultFactory
      * @param ChatRepositoryInterface        $chatRepository
@@ -83,6 +89,7 @@ class GetUsers extends Action
      * @param CustomerRepositoryInterface    $customerRepositoryInterface
      * @param Data                           $helper
      * @param SortOrderBuilder               $sortOrderBuilder
+     * @param ChatStatusHelper               $chatStatusHelper
      */
     public function __construct(
         Context                        $context,
@@ -96,7 +103,8 @@ class GetUsers extends Action
         JsonFactory                    $jsonResultFactory,
         CustomerRepositoryInterface    $customerRepositoryInterface,
         Data                           $helper,
-        SortOrderBuilder               $sortOrderBuilder
+        SortOrderBuilder               $sortOrderBuilder,
+        ChatStatusHelper               $chatStatusHelper
     ) {
         $this->resultFactory = $resultFactory;
         $this->chatRepository = $chatRepository;
@@ -109,6 +117,7 @@ class GetUsers extends Action
         $this->customerRepositoryInterface = $customerRepositoryInterface;
         $this->helper = $helper;
         $this->sortOrderBuilder = $sortOrderBuilder;
+        $this->chatStatusHelper = $chatStatusHelper;
         parent::__construct($context);
     }
 
@@ -134,7 +143,10 @@ class GetUsers extends Action
 
         // Get all chats
         $searchCriteria = $this->searchCriteriaBuilder
-            ->addSortOrder($this->sortOrderBuilder->setField('updated_at')->setDirection('DESC')->create())
+            ->addSortOrder($this->sortOrderBuilder->setField('updated_at')
+                ->setDirection('DESC')->create())
+            ->addFilter('status_id', $this->chatStatusHelper
+                ->getChatStatusId(ChatStatusHelper::ACTIVE_CHAT_STATUS))
             ->create();
         $chats = $this->chatRepository->getList($searchCriteria)->getItems();
 

@@ -80,8 +80,8 @@ class GetMessages extends Action
      */
     public function execute()
     {
-        $result = $this->jsonResultFactory->create();
         $chatMessages = [];
+        $result = $this->jsonResultFactory->create();
         $email = $this->getRequest()->getParam('email');
         $userId = $this->getRequest()->getParam('userId');
         $uuid = $this->getRequest()->getParam('uuid');
@@ -94,10 +94,8 @@ class GetMessages extends Action
             
             return $result;
         }
-
         // Get chat id and check if chat is active, if not return empty array
         $chatRepositoryItem = $this->getChatRepositoryItem($userId, $email, $uuid);
-
         if (is_array($chatRepositoryItem)) {
             $result->setData([
                 'isEmailTaken' => true,
@@ -106,7 +104,6 @@ class GetMessages extends Action
 
             return $result;
         }
-
         if (!$chatRepositoryItem || ($chatRepositoryItem && !$chatRepositoryItem->getChatId())) {
             $result->setData([
                 'messages' => $chatMessages,
@@ -145,7 +142,6 @@ class GetMessages extends Action
 
             $messages[] = $message;
         }
-
         $result->setData([
             'messages' => $messages,
             'unreadMessagesCount' => $unreadMessagesCount,

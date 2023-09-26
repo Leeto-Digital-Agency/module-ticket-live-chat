@@ -27,9 +27,17 @@ define([
             this.fileInput = $('#chat-container #file-input').first();
             this.emailInputSection = $('#chat-container .email-input-section').first();
             this.adminStatusSection = $('#chat-container .chat-popup .admin-status');
+            this.ticketSection = $('#chat-container .ticket-section');
+            this.submitTicketButton = this.ticketSection.find('#submit-ticket-button');
+            this.newChatSection = this.ticketSection.find('.new-chat');
+            this.ongoingChatSection = this.ticketSection.find('.ongoing-chat');
+            this.thankYouSection = this.ticketSection.find('.thank-you-wrapper');
+            this.ticketSection.hide();
+            this.thankYouSection.hide();
+            this.isChatConvertedToTicket = false;
             this.adminStatus = '';
             this.storedChatMessages = [];
-            this.email = null;
+            this.email = $.cookie('guest_email');
             this.uuid = $.cookie('guest_uuid');
             this.userId = config.loggedInUserId;
             this.supportAvatarImagePath = config.supportAvatarImagePath;
@@ -37,8 +45,33 @@ define([
             
             this.conn.onmessage = async (event) => {
                 let data = JSON.parse(event.data);
-                if (data.adminStatus) {
+                if (data.adminStatus && !this.isChatConvertedToTicket) {
                     this.updateAdminStatus(data.adminStatus);
+                    if (this.adminStatus === 'offline') {
+                        this.ticketSection.show();
+                        this.emailInputSection.hide();
+                        this.chatWrapper.hide(); // hide chat messages
+                        this.chatInput.hide(); // hide chat textarea
+                        let chatId = await this.getChatIdFromDb();
+
+                        if (chatId) {
+                            this.newChatSection.hide();
+                            this.ongoingChatSection.show();
+                        } else {
+                            this.newChatSection.show();
+                            this.ongoingChatSection.hide();
+                        }
+                        return;
+                    } else if (this.adminStatus === 'online') {
+                        this.ticketSection.hide();
+                        if (!this.userId && !this.uuid) {
+                            this.emailInputSection.show();
+                        } else {
+                            this.emailInputSection.hide();
+                            this.chatWrapper.show(); // show chat messages
+                            this.chatInput.show(); // show chat textarea
+                        }
+                    }
                 } else {
                     this.incrementUnreadMessagesCount(true);
                     this.markAsRead();
@@ -47,25 +80,41 @@ define([
                 }
             };
 
+            // Prepare data for server notification
+            let chatId = await this.getChatIdFromDb();
+            const notificationData = {
+                newConnection: true,
+                role: "user",
+                email: this.email,
+                chatId: chatId,
+                uuid: this.uuid
+            };
+            // Function to send data when the connection is ready
+            const sendDataWhenReady = () => {
+                return new Promise((resolve, reject) => {
+                    if (this.conn.readyState === WebSocket.OPEN) {
+                        this.conn.send(JSON.stringify(notificationData));
+                        resolve();
+                    } else {
+                        this.conn.addEventListener('open', () => {
+                            this.conn.send(JSON.stringify(notificationData));
+                            resolve();
+                        });
+                    }
+                });
+            };
+            // Send data when the connection is ready
+            await sendDataWhenReady();
+
             if (!this.userId && !this.uuid) {
                 this.chatWrapper.hide(); // hide chat messages
                 this.chatInput.hide(); // hide chat textarea
-                this.adminStatusSection.hide(); // hide admin status
             } else {
-                this.emailInputSection.hide(); // Hide email input form
+                this.emailInputSection.hide();
                 let response = await this.getChatMessages();
                 this.storedChatMessages =  response.messages;
                 this.countUnreadMessages = response.unreadMessagesCount;
                 this.incrementUnreadMessagesCount();
-
-                // Send notification to server
-                this.conn.send(JSON.stringify({
-                    newConnection: true,
-                    role: "user",
-                    userId: this.userId,
-                    chatId: this.getChatId(),
-                    uuid: this.uuid
-                }));
                 this.loadChatMessages();
             }
         },
@@ -87,7 +136,7 @@ define([
         attachEventHandlers: function () {
             var self = this;
 
-            this.chatButton.on('click', function () {
+            self.chatButton.on('click', function () {
                 self.toggleChatPopup();
             });
 
@@ -104,16 +153,18 @@ define([
                 if (!self.validateEmail()) {
                     return;
                 }
+                self.email = $('#email-input').val();
                 if (!$.cookie('guest_uuid')) {
                     self.uuid = self.generateUUID();
                     $.cookie('guest_uuid', self.uuid, { expires: 1 });
+                    $.cookie('guest_email', self.email, { expires: 1 });
                 }
-                self.email = $('#email-input').val();
-                let response = await self.getChatMessages();
 
+                let response = await self.getChatMessages();
                 if (response && response.isEmailTaken) {
-                    $.removeCookie('guest_uuid', { path: '/' });
+                    self.clearGuestInfo();
                     self.email = null;
+                    self.uuid = null;
                     $("#email-error-message").show();
                     $("#email-error-message").text('Email is already taken.');
                     return;
@@ -121,21 +172,58 @@ define([
                 } else {
                     self.storedChatMessages =  response.messages;
                 }
-
-                // Send notification to server
-                self.conn.send(JSON.stringify({
-                    newConnection: true,
-                    role: "user",
-                    email: self.email,
-                    chatId: self.getChatId(),
-                    uuid: self.uuid
-                }));
-
                 self.showGuestChatSection();
                 self.loadChatMessages();
             });
 
-            this.chatTextarea.on('keydown', function (event) {
+            self.submitTicketButton.on('click', async function (e) {
+                e.preventDefault();
+                let ticketStatus = parseInt($('input[name="ticket-status-choice"]:checked').val());
+                let ticketErrorMessage = self.ongoingChatSection.find('#ticket-error-message');
+                
+                if (ticketStatus) {
+                    ticketErrorMessage.hide();
+                    let chatId = await self.getChatIdFromDb();
+                    $.ajax({
+                        url: url.build('support/chat/createticket'),
+                        method: "GET",
+                        dataType: "json",
+                        data: {
+                            chatId: chatId,
+                            ticketStatus: ticketStatus
+                        },
+                        success: function (response) {
+                            console.log(response);
+                            if (response.success) {
+                                self.isChatConvertedToTicket = true;
+                                self.clearGuestInfo();
+                                self.ongoingChatSection.hide();
+                                self.newChatSection.hide();
+                                ticketErrorMessage.hide();
+                                self.chatWrapper.hide();
+                                self.chatInput.hide();
+                                
+                                if (ticketStatus === 1) {
+                                    self.thankYouSection.find('.thank-you-message')
+                                        .text($t("Thank you for contacting us! You'll be notified via email when we respond to your ticket."));
+                                } else {
+                                    self.thankYouSection.find('.thank-you-message')
+                                        .text($t('Thank you for contacting us!'));
+                                }
+                                self.thankYouSection.show();
+                            } else {
+                                ticketErrorMessage.show();
+                                ticketErrorMessage.text(response.errorMessage);
+                            }
+                        }
+                    });
+                } else {
+                    ticketErrorMessage.show();
+                    ticketErrorMessage.text('Please select an option.');
+                }
+            });
+
+            self.chatTextarea.on('keydown', function (event) {
                 if (event.key === 'Enter' && !event.shiftKey) {
                     event.preventDefault();
                     self.sendMessage();
@@ -145,11 +233,11 @@ define([
                 }
             });
 
-            this.chatTextarea.on('input', function () {
+            self.chatTextarea.on('input', function () {
                 self.adjustTextareaHeight();
             });
 
-            this.fileInput.on('change', function () {
+            self.fileInput.on('change', function () {
                 self.handleFileAttachment();
                 self.scrollToBottom();
             });
@@ -459,10 +547,32 @@ define([
         },
 
         getChatId: function () {
-            if (!this.storedChatMessages || this.storedChatMessages.length === 0) {
+            if (this.storedChatMessages && this.storedChatMessages.length > 0) {
+                return this.storedChatMessages[0].chatId;
+            }
+            return null;
+        },
+
+        getChatIdFromDb: async function () {
+            let response;
+
+            try {
+                response = await $.ajax({
+                    url: url.build('support/chat/getchatid'),
+                    method: "GET",
+                    dataType: "json",
+                    data: {
+                        email: this.email,
+                        userId: this.userId,
+                        uuid: this.uuid
+                    }
+                });
+
+            } catch (error) {
+                console.log(error);
                 return null;
             }
-            return this.storedChatMessages[0].chatId;
+            return response.chatId;
         },
 
         updateAdminStatus: function (status) {
@@ -508,25 +618,30 @@ define([
                 }
             }
         },
-        markAsRead: function () {
+        markAsRead: async function () {
             if (this.chatPopup && this.chatPopup.hasClass('active')) {
                 if (this.countUnreadMessages > 0) {
                     this.countUnreadMessages = 0;
                     this.chatButton.find('.unread-messages-count').hide();
                 }
                 
+                let chatId = await this.getChatIdFromDb();
                 $.ajax({
                     url: url.build('support/chat/markasread'),
                     method: "GET",
                     dataType: "json",
                     data: {
-                        chatId: this.getChatId(),
+                        chatId: chatId,
                     },
                     success: function (response) {
                         console.log(response);
                     }
                 });
             }
+        },
+        clearGuestInfo: function () {
+            $.removeCookie('guest_uuid', { path: '/' });
+            $.removeCookie('guest_email', { path: '/' });
         }
     });
 });
