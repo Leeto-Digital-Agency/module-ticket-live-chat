@@ -1,12 +1,5 @@
 <?php
 
-/**
- * Copyright © Leeto All rights reserved.
- * See COPYING.txt for license details.
- */
-
-declare(strict_types=1);
-
 namespace Leeto\TicketLiveChat\Model;
 
 use Leeto\TicketLiveChat\Api\Data\ChatMessageInterface;
@@ -119,6 +112,23 @@ class ChatMessage extends AbstractModel implements ChatMessageInterface
     public function setIsRead($isRead)
     {
         return $this->setData(self::IS_READ, $isRead);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getIsAlert()
+    {
+        return $this->getData(self::IS_ALERT);
+    }
+
+    /**
+     * @param $isAlert
+     * @return Leeto\TicketLiveChat\Api\Data\ChatMessageInterface
+     */
+    public function setIsAlert($isAlert)
+    {
+        return $this->setData(self::IS_ALERT, $isAlert);
     }
 
     /**

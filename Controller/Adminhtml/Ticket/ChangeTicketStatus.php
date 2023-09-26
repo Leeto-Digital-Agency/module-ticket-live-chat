@@ -5,8 +5,7 @@ namespace Leeto\TicketLiveChat\Controller\Adminhtml\Ticket;
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\Controller\Result\JsonFactory;
-use Leeto\TicketLiveChat\Model\TicketFactory;
-use Leeto\TicketLiveChat\Model\TicketStatusFactory;
+use Leeto\TicketLiveChat\Helper\Ticket\TicketStatusHelper;
 
 class ChangeTicketStatus extends Action
 {
@@ -16,55 +15,40 @@ class ChangeTicketStatus extends Action
     protected $resultJsonFactory;
 
     /**
-     * @var TicketFactory
+     * @var TicketStatusHelper
      */
-    protected $ticketFactory;
-
-    /**
-     * @var TicketStatusFactory
-     */
-    protected $ticketStatusFactory;
+    protected $ticketStatusHelper;
 
     /**
      * @param Context               $context
      * @param JsonFactory           $resultJsonFactory
-     * @param TicketFactory         $ticketFactory
-     * @param TicketStatusFactory   $ticketStatusFactory
+     * @param TicketStatusHelper    $ticketStatusHelper
      */
     public function __construct(
         Context               $context,
         JsonFactory           $resultJsonFactory,
-        TicketFactory         $ticketFactory,
-        TicketStatusFactory   $ticketStatusFactory
+        TicketStatusHelper    $ticketStatusHelper
     ) {
-        $this->ticketFactory = $ticketFactory;
-        $this->ticketStatusFactory = $ticketStatusFactory;
+        $this->ticketStatusHelper = $ticketStatusHelper;
         $this->resultJsonFactory = $resultJsonFactory;
         parent::__construct($context);
     }
 
     public function execute()
     {
+        $result = $this->resultJsonFactory->create();
         try {
             $newStatusId = $this->getRequest()->getParam('status_value');
-            $ticketStatusModel = $this->ticketStatusFactory->create();
-            $ticketStatus = $ticketStatusModel->load($newStatusId);
-            if (!$ticketStatus->getId()) {
-                $errorMessage = "Status doesn't seem to exist!";
-                $result = $this->resultJsonFactory->create();
-                return $result->setData(['error' => true, 'message' => $errorMessage]);
-            }
             $ticketId = $this->getRequest()->getParam('ticket_id');
-            $ticketModel = $this->ticketFactory->create();
-            $ticket = $ticketModel->load($ticketId);
-            $ticket->setStatusId($newStatusId);
-            $ticket->save();
+            $data = $this->ticketStatusHelper->changeTicketStatus($newStatusId, $ticketId);
+            $this->ticketStatusHelper->addStatusChangeMessage($newStatusId, $ticketId);
         } catch (\Exception $e) {
-            $result = $this->resultJsonFactory->create();
             return $result->setData(['error' => $e->getMessage()]);
         }
-
-        $result = $this->resultJsonFactory->create();
-        return $result->setData(['success' => true]);
+        if (isset($data['error'])) {
+            return $result->setData(['error' => $data['error'], 'message' => $data['message']]);
+        } elseif (isset($data['success'])) {
+            return $result->setData(['success' => true]);
+        }
     }
 }

@@ -1,0 +1,20 @@
+<!--@subject {{trans "Ticket Reply"}} @-->
+<!--@vars {
+"var this.getUrl($store,'support/ticket/view/',[_query:[ticket_id:$ticketId],_nosid:1])":"Ticket View URL",
+"var customer_name":"Customer Name"
+"var admin_name":"Admin Name"
+"var customer_name":"Ticket Subject"
+"var ticket_id":"Ticket ID"
+} @-->
+{{template config_path="design/email/header_template"}}
+
+<p>Hello {{var customer_name}},</p>
+
+<p>{{var admin_name}} has replied to your ticket regarding "{{var ticket_subject}}"</p>
+
+{{trans
+    'Please click <a href="%ticket_url">here</a> to go to the ticket.'
+
+    ticket_url=$this.getUrl($store,'support/ticket/view/',[_query:[ticket_id:$ticket_id],_nosid:1])
+|raw}}
+{{template config_path="design/email/footer_template"}}

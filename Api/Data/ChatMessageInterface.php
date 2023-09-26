@@ -1,12 +1,5 @@
 <?php
 
-/**
- * Copyright © Leeto All rights reserved.
- * See COPYING.txt for license details.
- */
-
-declare(strict_types=1);
-
 namespace Leeto\TicketLiveChat\Api\Data;
 
 interface ChatMessageInterface
@@ -17,6 +10,7 @@ interface ChatMessageInterface
     public const CHATMESSAGE_ID = 'message_id';
     public const ATTACHMENT_ID = 'attachment_id';
     public const IS_READ = 'is_read';
+    public const IS_ALERT = 'is_alert';
     public const CREATED_AT = 'created_at';
 
     /**
@@ -96,6 +90,19 @@ interface ChatMessageInterface
      * @return string|null
      */
     public function getIsRead();
+
+    /**
+     * Set is_alert
+     * @param string $isAlert
+     * @return \Leeto\TicketLiveChat\ChatMessage\Api\Data\ChatMessageInterface
+     */
+    public function setIsAlert($isAlert);
+
+    /**
+     * Get is_alert
+     * @return string|null
+     */
+    public function getIsAlert();
 
     /**
      * Set created_at

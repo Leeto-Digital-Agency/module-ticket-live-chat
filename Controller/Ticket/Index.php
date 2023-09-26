@@ -1,12 +1,5 @@
 <?php
 
-/**
- * Copyright © Leeto All rights reserved.
- * See COPYING.txt for license details.
- */
-
-declare(strict_types=1);
-
 namespace Leeto\TicketLiveChat\Controller\Ticket;
 
 use Magento\Framework\App\Action\HttpGetActionInterface;
@@ -21,7 +14,7 @@ class Index implements HttpGetActionInterface
     protected $resultPageFactory;
 
     /**
-     * Constructor
+     * Construct
      *
      * @param PageFactory $resultPageFactory
      */
