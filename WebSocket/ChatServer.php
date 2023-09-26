@@ -167,7 +167,6 @@ class ChatServer implements MessageComponentInterface
                         // It serves to send notifications about the admin status to the user
                         $this->addConnectionToChat($from, $from->resourceId);
                     }
-
                     $this->notifyUserAdminStatus($from);
                 }
                 return;
@@ -183,8 +182,11 @@ class ChatServer implements MessageComponentInterface
             } elseif (isset($data['uuid']) && $data['uuid']) {
                 $chat->load($data['uuid'], 'uuid');
             }
-    
-            if ($chat && $chat->getChatId()) {
+            if ($chat && 
+                $chat->getChatId() &&
+                $chat->getStatusId() === $this->chatStatusHelper
+                    ->getChatStatusId(ChatStatusHelper::ACTIVE_CHAT_STATUS)
+            ) {
                 $chatId = $chat->getChatId();
             } else {
                 try {
@@ -313,6 +315,7 @@ class ChatServer implements MessageComponentInterface
         if ($chatId) {
             unset($this->clientsChatConnectionMapping[$chatId]);
         } else {
+            sleep(5);
             $this->adminChatConnection = null;
             $this->notifyUsersAdminStatus();
         }

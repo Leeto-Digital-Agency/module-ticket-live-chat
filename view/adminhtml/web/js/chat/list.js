@@ -18,8 +18,7 @@ define([
         },
 
         setupElements: function (config) {
-            // this.conn = new WebSocket("ws://" + config.webBaseUrl + ":" + config.webSocketPort);
-            this.conn = new WebSocket(`ws://${config.webBaseUrl}:${config.webSocketPort}`);
+            this.conn = new WebSocket("ws://" + config.webBaseUrl + ":" + config.webSocketPort);
             this.userList = $('#chat-admin-container .user-list');
             this.totalChats = $('#chat-admin-container .total-chats');
             this.chatArea = $('#chat-admin-container .chat-area');
@@ -28,8 +27,11 @@ define([
             this.chatTextarea = $('#chat-admin-container .chat-input textarea');
             this.welcomeMessage = $('#chat-admin-container .welcome-message');
             this.fileInput = $('#chat-admin-container #file-input');
+            this.statusSelect = $('#chat-admin-container #chat-status-list');
+            this.statusModal = $('#status-update-modal');
             this.getUsersUrl = config.getUsersUrl;
             this.updateChatHeaderUrl = config.updateChatHeaderUrl;
+            this.changeChatStatusControllerUrl = config.changeChatStatusControllerUrl;
             this.updateUnreadChatMessages = config.updateUnreadChatMessages;
             this.userAvatarImagePath = config.userAvatarImagePath;
         },
@@ -41,7 +43,7 @@ define([
                     role: "admin"
                 }));
             };
-        
+
             this.conn.onmessage = async (event) => {
                 let self = this;
 
@@ -96,6 +98,13 @@ define([
                 }
             });
 
+            let previousSelectedOption;
+            this.statusSelect.on('focus', function () {
+                previousSelectedOption = $(this).val();
+            }).change(function() {
+                self.handleChatStatusUpdate(previousSelectedOption, $(this));
+            });
+
             this.chatTextarea.on('input', function () {
                 self.adjustTextareaHeight();
             });
@@ -135,6 +144,40 @@ define([
             await this.updateUnreadMessages();
             this.fetchChatHeaderData();
             this.scrollToBottom();
+        },
+
+        handleChatStatusUpdate: function (previousSelectedOption, target) {
+            let self = this;
+            this.statusModal.show();
+
+            this.statusModal.find('#modalYesBtn').off('click');
+            this.statusModal.find('#modalNoBtn').off('click');
+            this.statusModal.find('#modalYesBtn').on('click', function () {
+                let statusValue = target.val();
+                $.ajax({
+                    url: self.changeChatStatusControllerUrl,
+                    type: 'POST',
+                    dataType: 'JSON',
+                    data: { 
+                        chatId: self.selectedChatId,
+                        statusValue: statusValue
+                    },
+                    success: function (response) {
+                        self.statusModal.hide();
+                        self.users = self.users.filter(user => user.id != self.selectedChatId);
+                        self.displayUserList();
+                        self.selectedChatId = null;
+                        self.displayWelcomeMessage();
+                    },
+                    error: function (xhr, status, error) {
+                        console.log(error);
+                    }
+                });
+            });
+            this.statusModal.find('#modalNoBtn').on('click', function () {
+                target.val(previousSelectedOption);
+                self.statusModal.hide();
+            });
         },
 
         handleSendMessage: function () {
@@ -485,7 +528,7 @@ define([
             let customerNameElement = $('.chat-customer .customer');
             let customerEmailElement = $('.chat-customer .email');
             let createdAtElement = $('.chat-date .date');
-            let statusDiv = $('.chat-status .status');
+            let statusDiv = $('.chat-status #status-update');
 
             if (selectedUser.isGuest) {
                 customerNameElement.text(selectedUser.name);
@@ -499,7 +542,8 @@ define([
             
             customerEmailElement.text(selectedUser.email);
             createdAtElement.text(data.createdAt);
-            statusDiv.text(data.statusLabel).addClass(data.status);
+            // statusDiv.text(data.statusLabel);
+            statusDiv.removeClass().addClass(data.status)
         },
 
         updateUnreadMessages: function () {

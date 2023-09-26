@@ -99,24 +99,22 @@ class UpdateChatHeader extends Action
             $chatId = $this->getRequest()->getParam('chatId');
 
             $searchCriteria = $this->searchCriteriaBuilder
-            ->addFilter('chat_id', $chatId, 'eq')
-            ->setPageSize(1)
-            ->create();
+                ->addFilter('chat_id', $chatId, 'eq')
+                ->setPageSize(1)
+                ->create();
             $chatRepository = $this->chatRepository->getList($searchCriteria)->getItems()[0];
             $chatStatus = $this->chatStatusFactory->create()
                 ->load($chatRepository->getStatusId(), 'status_id');
-
-            $status = $this->chatStatusHelper->getChatStatusById($chatStatus->getStatusId());
+            $status = $this->chatStatusHelper->getChatStatusLabelById($chatStatus->getStatusId());
             $statusLabel = $chatStatus->getLabel();
             $formattedDate = $this->dateTime->gmtDate('d.m.Y', $chatRepository->getCreatedAt());
-
             $data = [
                 'createdAt' => $formattedDate,
                 'status' => $status,
                 'statusLabel' => $statusLabel
             ];
-
             $result = $this->resultJsonFactory->create();
+
             return $result->setData($data);
         } catch (\Exception $e) {
             $result = $this->resultJsonFactory->create();

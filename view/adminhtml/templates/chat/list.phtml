@@ -1,3 +1,6 @@
+<?php
+    $chatStatuses = $block->getChatStatuses();
+?>
 <div id="chat-admin-container">
     <div class="user-list-wrapper">
         <div class="chats-info">
@@ -29,7 +32,16 @@
                 </div>
                 <div class="chat-status">
                     <span class="title"><?= $escaper->escapeHtml(__('Status:')) ?></span>
-                    <span class="status"></span>
+                    <div id="status-update">
+                        <select id="chat-status-list">
+                            <?php foreach ($chatStatuses as $status): ?>
+                                <option 
+                                    value="<?= $escaper->escapeHtml($status['value']) ?>">
+                                    <?= $escaper->escapeHtml($status['label']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
@@ -86,6 +98,7 @@
     $getUsersUrl =  $block->getFullUrl('leeto_support/chat/getusers');
     $updateChatHeaderUrl =  $block->getFullUrl('leeto_support/chat/updatechatheader');
     $updateUnreadChatMessages = $block->getFullUrl('leeto_support/chat/updateunreadmessages');
+    $changeChatStatusControllerUrl = $block->getFullUrl('leeto_support/chat/changechatstatus');
     $userAvatarImagePath = $helper->getUserAvatarImagePath();
     $webBaseUrl = substr($helper->getWebBaseUrl(), strpos($helper->getWebBaseUrl(), "//") + 2, -1);
     $webSocketPort = $helper->getWebsocketPort();
@@ -97,6 +110,7 @@
         "Leeto_TicketLiveChat/js/chat/list": {
             "getUsersUrl": "<?= $getUsersUrl ?>",
             "updateChatHeaderUrl": "<?= $updateChatHeaderUrl ?>",
+            "changeChatStatusControllerUrl": "<?= $changeChatStatusControllerUrl ?>",
             "updateUnreadChatMessages": "<?= $updateUnreadChatMessages ?>",
             "userAvatarImagePath": "<?= $userAvatarImagePath ?>",
             "webBaseUrl": "<?= $webBaseUrl ?>",

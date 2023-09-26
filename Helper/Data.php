@@ -8,6 +8,7 @@ use Magento\Framework\App\Helper\Context;
 use Magento\Catalog\Helper\Image;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Backend\Model\Url;
+use Magento\Backend\Model\Auth\Session as BackendSession;
 
 class Data extends AbstractHelper
 {
@@ -45,6 +46,11 @@ class Data extends AbstractHelper
      * @var Url
      */
     protected $backendUrlManager;
+
+    /**
+     * @var BackendSession
+     */
+    protected $backendSession;
     
    /**
     * @param Context                     $context
@@ -52,19 +58,22 @@ class Data extends AbstractHelper
     * @param Image                       $imageHelper
     * @param CustomerRepositoryInterface $customerRepositoryInterface
     * @param Url                         $backendUrlManager
+    * @param BackendSession              $backendSession
     */
     public function __construct(
         Context                     $context,
         Session                     $customerSession,
         Image                       $imageHelper,
         CustomerRepositoryInterface $customerRepositoryInterface,
-        Url                         $backendUrlManager
+        Url                         $backendUrlManager,
+        BackendSession              $backendSession
     ) {
         parent::__construct($context);
         $this->customerSession = $customerSession;
         $this->imageHelper = $imageHelper;
         $this->customerRepositoryInterface = $customerRepositoryInterface;
         $this->backendUrlManager = $backendUrlManager;
+        $this->backendSession = $backendSession;
     }
 
     /**
@@ -189,5 +198,13 @@ class Data extends AbstractHelper
         $baseUrl = substr($this->getWebBaseUrl(), strpos($this->getWebBaseUrl(), "//") + 2, -1);
         $port = $this->getWebsocketPort();
         return 'ws://' . $baseUrl . ':' . $port;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isBackendAdminLoggedIn()
+    {
+        return $this->backendSession->getUser() && $this->backendSession->getUser()->getId();
     }
 }
