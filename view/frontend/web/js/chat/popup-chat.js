@@ -41,6 +41,8 @@ define([
             this.uuid = $.cookie('guest_uuid');
             this.userId = config.loggedInUserId;
             this.supportAvatarImagePath = config.supportAvatarImagePath;
+            this.allowedExtensions = config.allowedExtensions;
+            this.maxFilesSize = config.maxFilesSize;
             this.countUnreadMessages = 0;
             
             this.conn.onmessage = async (event) => {
@@ -465,12 +467,11 @@ define([
         },
 
         validateFile: function (file) {
-            let allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
-            let maxFileSize = 3 * 1024 * 1024; // 3 MB in bytes
+            let convertedMaxFilesSize = this.maxFilesSize * 1024 * 1024;
             let fileNameParts = file.name.split('.');
             let fileExtension = fileNameParts[fileNameParts.length - 1].toLowerCase();
 
-            return allowedExtensions.includes(fileExtension) && file.size <= maxFileSize;
+            return this.allowedExtensions.includes(fileExtension) && file.size <= convertedMaxFilesSize;
         },
 
         getFileType: function (originalName) {

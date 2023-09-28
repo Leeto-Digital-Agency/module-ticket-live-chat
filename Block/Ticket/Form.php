@@ -10,6 +10,7 @@ use Magento\Customer\Model\Session;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory as OrderCollectionFactory;
 use Leeto\TicketLiveChat\Helper\Ticket\TicketTypeHelper;
 use Magento\Framework\Session\SessionManagerInterface;
+use Leeto\TicketLiveChat\Helper\Ticket\FileValidationHelper;
 
 class Form extends Template
 {
@@ -42,7 +43,12 @@ class Form extends Template
      * @var SessionManagerInterface
      */
     protected $sessionManagerInterface;
-    
+
+    /**
+     * @var FileValidationHelper
+     */
+    protected $fileValidationHelper;
+
     /**
      * Construct
      *
@@ -54,6 +60,7 @@ class Form extends Template
      * @param OrderCollectionFactory        $orderCollectionFactory
      * @param TicketTypeHelper              $ticketTypeHelper
      * @param SessionManagerInterface       $sessionManagerInterface
+     * @param FileValidationHelper          $fileValidationHelper
      */
     public function __construct(
         Context                      $context,
@@ -63,6 +70,7 @@ class Form extends Template
         OrderCollectionFactory       $orderCollectionFactory,
         TicketTypeHelper             $ticketTypeHelper,
         SessionManagerInterface      $sessionManagerInterface,
+        FileValidationHelper         $fileValidationHelper,
         array                        $data = [],
     ) {
         $this->ticketTypeRepository = $ticketTypeRepository;
@@ -71,6 +79,7 @@ class Form extends Template
         $this->orderCollectionFactory = $orderCollectionFactory;
         $this->ticketTypeHelper = $ticketTypeHelper;
         $this->sessionManagerInterface = $sessionManagerInterface;
+        $this->fileValidationHelper = $fileValidationHelper;
         parent::__construct($context, $data);
     }
 
@@ -131,6 +140,30 @@ class Form extends Template
     public function getTicketOrderTypeId()
     {
         return $this->ticketTypeHelper->getTicketOrderTypeId();
+    }
+
+    /**
+     * @return string
+     */
+    public function getAllowedFileExtensions()
+    {
+        return $this->fileValidationHelper->getAllowedFileExtensions();
+    }
+
+    /**
+     * @return string
+     */
+    public function getMaximumFilesSize()
+    {
+        return $this->fileValidationHelper->getMaximumFilesSize();
+    }
+
+    /**
+     * @return string
+     */
+    public function getMaximumFilesToUpload()
+    {
+        return $this->fileValidationHelper->getMaximumFilesToUpload();
     }
 
     /**

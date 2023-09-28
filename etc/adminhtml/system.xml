@@ -1,12 +1,12 @@
 <?xml version="1.0" ?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
 	<system>
-		<tab id="leeto_tickets" translate="label" sortOrder="999">
-			<label>Leeto Tickets</label>
+		<tab id="leeto" translate="label" sortOrder="999">
+			<label>Leeto</label>
 		</tab>
 		<section id="support" sortOrder="10" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
-			<label>Support</label>
-			<tab>leeto_tickets</tab>
+			<label>Tickets</label>
+			<tab>leeto</tab>
 			<resource>Magento_Backend::content</resource>
 			<group id="ticket" sortOrder="10" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
 				<label>Ticket Options</label>
@@ -14,11 +14,35 @@
 					<label>Ticket Order Type</label>
 					<source_model>Leeto\TicketLiveChat\Model\Config\Source\Ticket\Types</source_model>
 				</field>
+				<field id="user_avatar_image" type="Magento\Config\Block\System\Config\Form\Field\File" sortOrder="20" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+					<label>User Avatar Image</label>
+					<backend_model>Magento\Config\Model\Config\Backend\Image</backend_model>
+					<upload_dir config="system" scope_info="1">avatar</upload_dir>
+				</field>
+				<field id="admin_avatar_image" type="Magento\Config\Block\System\Config\Form\Field\File" sortOrder="30" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+					<label>Admin Avatar Image</label>
+					<backend_model>Magento\Config\Model\Config\Backend\Image</backend_model>
+					<upload_dir config="system" scope_info="1">avatar</upload_dir>
+				</field>
+			</group>
+			<group id="ticket_files_upload" sortOrder="15" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+				<label>Ticket File Options</label>
+				<field id="maximum_files" type="text" sortOrder="10" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+					<label>Maximum files to upload</label>
+					<validate>validate-no-empty</validate>
+				</field>
+				<field id="maximum_files_size" type="text" sortOrder="10" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+					<label>Maximum files size</label>
+                    <comment>Value in MB.(100 = 100MB, 1000 = 1GB)</comment>
+					<validate>validate-no-empty</validate>
+				</field>
+				<field id="allowed_extensions" type="text" sortOrder="10" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+					<label>Allowed file extensions</label>
+                    <comment>Comma-seperated.</comment>
+					<validate>validate-no-empty</validate>
+				</field>
 			</group>
 		</section>
-		<tab id="leeto" translate="label" sortOrder="999">
-			<label>Leeto</label>
-		</tab>
 		<section id="live_chat" sortOrder="10" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
 			<label>Live Chat</label>
 			<tab>leeto</tab>
@@ -46,6 +70,23 @@
 					<label>Support Avatar Image</label>
 					<backend_model>Magento\Config\Model\Config\Backend\Image</backend_model>
 					<upload_dir config="system" scope_info="1">avatar</upload_dir>
+				</field>
+				<field id="live_chat_position" type="select" sortOrder="40" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+					<label>Live Chat Position</label>
+					<source_model>Leeto\TicketLiveChat\Model\Config\Source\Chat\Position</source_model>
+				</field>
+			</group>
+			<group id="chat_files_upload" sortOrder="15" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+				<label>Chat File Options</label>
+				<field id="maximum_files_size" type="text" sortOrder="10" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+					<label>Maximum file size</label>
+                    <comment>Value in MB.(100 = 100MB, 1000 = 1GB)</comment>
+					<validate>validate-no-empty</validate>
+				</field>
+				<field id="allowed_extensions" type="text" sortOrder="10" showInWebsite="1" showInStore="1" showInDefault="1" translate="label">
+					<label>Allowed file extensions</label>
+                    <comment>Comma-seperated.</comment>
+					<validate>validate-no-empty</validate>
 				</field>
 			</group>
 		</section>

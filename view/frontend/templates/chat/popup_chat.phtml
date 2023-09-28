@@ -4,8 +4,11 @@
     $supportAvatarImagePath = $helper->getSupportAvatarImagePath();
     $webBaseUrl = substr($helper->getWebBaseUrl(), strpos($helper->getWebBaseUrl(), "//") + 2, -1);
     $webSocketPort = $helper->getWebsocketPort();
+    $chatPosition = $helper->getChatPosition();
+    $allowedExtensions = $this->helper('Leeto\TicketLiveChat\Helper\Chat\ChatHelper')->getAllowedFileExtensions();
+    $maxFilesSize = $this->helper('Leeto\TicketLiveChat\Helper\Chat\ChatHelper')->getMaximumFilesSize();
 ?>
-<div id="chat-container">
+<div id="chat-container" class="<?= $escaper->escapeHtml($chatPosition) ?>">
     <button class="chat-button">
         <div class="unread-messages-count" style="display: none"></div>
         <div class="chat-button-wrapper">
@@ -196,7 +199,9 @@
             "loggedInUserId": "<?= $loggedInUserId ?>",
             "supportAvatarImagePath": "<?= $supportAvatarImagePath ?>",
             "webBaseUrl": "<?= $webBaseUrl ?>",
-            "webSocketPort": "<?= $webSocketPort ?>"
+            "webSocketPort": "<?= $webSocketPort ?>",
+            "allowedExtensions": "<?= $this->escapeHtml($allowedExtensions) ?>",
+            "maxFilesSize": "<?= $this->escapeHtml($maxFilesSize) ?>"
         }
     }
 } 

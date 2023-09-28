@@ -6,13 +6,23 @@
                 <ticket>
                     <order_type_ticket>2</order_type_ticket>
                 </ticket>
+                <ticket_files_upload>
+                    <maximum_files>5</maximum_files>
+                    <maximum_files_size>15</maximum_files_size>
+                    <allowed_extensions>jpg,jpeg,png,pdf,doc,docx</allowed_extensions>
+                </ticket_files_upload>
             </support>
             <live_chat>
                 <settings>
                     <ongoing_chat_status>1</ongoing_chat_status>
                     <closed_chat_status>2</closed_chat_status>
                     <websocket_port>8000</websocket_port>
+                    <live_chat_position>right</live_chat_position>
                 </settings>
+                <chat_files_upload>
+                    <maximum_files_size>15</maximum_files_size>
+                    <allowed_extensions>jpg,jpeg,png,pdf,doc,docx</allowed_extensions>
+                </chat_files_upload>
             </live_chat>
         </default>
     </config>

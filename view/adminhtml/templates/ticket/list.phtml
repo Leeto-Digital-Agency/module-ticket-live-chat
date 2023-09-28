@@ -130,7 +130,11 @@
             "addAdminMessageControllerUrl": "<?= $escaper->escapeHtml($this->getAddAdminMessageControllerUrl()) ?>",
             "changeTicketStatusControllerUrl": "<?= $escaper
                 ->escapeHtml($this->getChangeTicketStatusControllerUrl()) ?>",
-            "showTicketsByStatusUrl": "<?= $escaper->escapeHtml($this->getShowTicketsByStatusUrl()) ?>"
+            "showTicketsByStatusUrl": "<?= $escaper->escapeHtml($this->getShowTicketsByStatusUrl()) ?>",
+            "allowedExtensions": "<?= $this->escapeHtml($this->getAllowedFileExtensions()) ?>",
+            "maxFilesSize": "<?= $this->escapeHtml($this->getMaximumFilesSize()) ?>",
+            "maxFilesToUpload": "<?= $this->escapeHtml($this->getMaximumFilesToUpload()) ?>",
+            "adminAvatarImage": "<?= $this->escapeHtml($this->getAdminAvatarImage()) ?>"
         } 
    }
 } 

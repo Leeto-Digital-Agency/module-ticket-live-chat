@@ -18,6 +18,7 @@ use Leeto\TicketLiveChat\Helper\Ticket\TicketStatusHelper;
 use Magento\Sales\Model\Order;
 use Leeto\TicketLiveChat\Helper\Chat\ChatStatusHelper;
 use Leeto\TicketLiveChat\Model\ChatMessageAttachmentFactory;
+use Leeto\TicketLiveChat\Helper\Ticket\FileValidationHelper;
 
 class Create extends Action
 {
@@ -87,6 +88,11 @@ class Create extends Action
     protected $chatMessageAttachmentFactory;
 
     /**
+     * @var FileValidationHelper
+     */
+    protected $fileValidationHelper;
+
+    /**
      * @param Context                       $context
      * @param SessionManagerInterface       $sessionManager
      * @param PageFactory                   $resultPageFactory
@@ -101,6 +107,7 @@ class Create extends Action
      * @param Order                         $orderModel
      * @param ChatStatusHelper              $chatStatusHelper
      * @param ChatMessageAttachmentFactory  $chatMessageAttachmentFactory
+     * @param FileValidationHelper          $fileValidationHelper
      */
     public function __construct(
         Context $context,
@@ -116,7 +123,8 @@ class Create extends Action
         TicketStatusHelper $ticketStatusHelper,
         Order $orderModel,
         ChatStatusHelper $chatStatusHelper,
-        ChatMessageAttachmentFactory $chatMessageAttachmentFactory
+        ChatMessageAttachmentFactory $chatMessageAttachmentFactory,
+        FileValidationHelper         $fileValidationHelper
     ) {
         parent::__construct($context);
         $this->sessionManager = $sessionManager;
@@ -132,6 +140,7 @@ class Create extends Action
         $this->orderModel = $orderModel;
         $this->chatStatusHelper = $chatStatusHelper;
         $this->chatMessageAttachmentFactory = $chatMessageAttachmentFactory;
+        $this->fileValidationHelper = $fileValidationHelper;
     }
 
     public function execute()
@@ -205,7 +214,7 @@ class Create extends Action
                 // Create Chat
                 $chatData = [
                     'ticket_id' => $ticket->getId(),
-                    'status_id' => $this->chatStatusHelper->getOnGoingStatusId(),
+                    'status_id' => $this->chatStatusHelper->getChatStatusId(ChatStatusHelper::CLOSED_CHAT_STATUS),
                     'email' => $data['email']
                 ];
                 $chat = $this->chatFactory->create();
@@ -269,9 +278,10 @@ class Create extends Action
      */
     protected function validateUploadedFiles(array $files)
     {
-        $allowedExtensions = ['docx', 'doc', 'pdf', 'jpg', 'jpeg', 'png'];
-        $maxFileSize = 15 * 1024 * 1024; // 15 MB
-        $maxFileCount = 5;
+        $allowedExtensions = explode(',', $this->fileValidationHelper->getAllowedFileExtensions());
+        $maxFileSize = $this->fileValidationHelper->getMaximumFilesSize();
+        $convertedMaxFileSize = $maxFileSize * 1024 * 1024;
+        $maxFileCount = $this->fileValidationHelper->getMaximumFilesToUpload();
 
         $errorMessage = '';
         $totalFileSize = 0;
@@ -286,7 +296,7 @@ class Create extends Action
             $totalFileSize += $file['size'];
             $fileCount++;
 
-            if ($file['size'] > $maxFileSize) {
+            if ($file['size'] > $convertedMaxFileSize) {
                 $errorMessage = __('File size exceeds the limit.');
             }
 
@@ -294,7 +304,7 @@ class Create extends Action
                 $errorMessage = __('Maximum file count exceeded.');
             }
         }
-        if ($totalFileSize > $maxFileSize) {
+        if ($totalFileSize > $convertedMaxFileSize) {
             $errorMessage = __('Total file size exceeds the limit.');
         }
 

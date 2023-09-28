@@ -12,7 +12,10 @@ use Leeto\TicketLiveChat\Api\Data\TicketInterfaceFactory;
 use Leeto\TicketLiveChat\Helper\Ticket\TicketTypeHelper;
 use Leeto\TicketLiveChat\Helper\Ticket\TicketStatusHelper;
 use Magento\Customer\Api\CustomerRepositoryInterface;
-
+use Magento\Framework\Api\SortOrderBuilder;
+use Magento\Framework\Api\SearchCriteriaBuilderFactory;
+use Leeto\TicketLiveChat\Model\ResourceModel\ChatMessage\CollectionFactory as ChatMessageCollection;
+use Magento\Framework\App\Helper\Context;
 
 class ChatHelper extends AbstractHelper
 {
@@ -57,6 +60,22 @@ class ChatHelper extends AbstractHelper
     protected $customerRepositoryInterface;
 
     /**
+     * @var SortOrderBuilder
+     */
+    protected $sortOrderBuilder;
+
+    /**
+     * @var SearchCriteriaBuilderFactory
+     */
+    protected $searchCriteriaBuilderFactory;
+
+    /**
+     * @var ChatMessageCollection
+     */
+    protected $chatMessageCollection;
+
+    /**
+     * @param Context                      $context
      * @param LoggerInterface              $logger
      * @param ChatRepositoryInterface      $chatRepository
      * @param ChatStatusHelper             $chatStatusHelper
@@ -65,8 +84,12 @@ class ChatHelper extends AbstractHelper
      * @param TicketRepositoryInterface    $ticketRepositoryInterface
      * @param TicketStatusHelper           $ticketStatusHelper
      * @param CustomerRepositoryInterface  $customerRepositoryInterface
+     * @param SortOrderBuilder             $sortOrderBuilder
+     * @param SearchCriteriaBuilderFactory $searchCriteriaBuilderFactory
+     * @param ChatMessageCollection        $chatMessageCollection
      */
     public function __construct(
+        Context                      $context,
         LoggerInterface              $logger,
         ChatRepositoryInterface      $chatRepository,
         ChatStatusHelper             $chatStatusHelper,
@@ -74,7 +97,10 @@ class ChatHelper extends AbstractHelper
         TicketTypeHelper             $ticketTypeHelper,
         TicketRepositoryInterface    $ticketRepositoryInterface,
         TicketStatusHelper           $ticketStatusHelper,
-        CustomerRepositoryInterface  $customerRepositoryInterface
+        CustomerRepositoryInterface  $customerRepositoryInterface,
+        SortOrderBuilder             $sortOrderBuilder,
+        SearchCriteriaBuilderFactory $searchCriteriaBuilderFactory,
+        ChatMessageCollection        $chatMessageCollection
     ) {
         $this->logger = $logger;
         $this->chatRepository = $chatRepository;
@@ -84,6 +110,10 @@ class ChatHelper extends AbstractHelper
         $this->ticketRepositoryInterface = $ticketRepositoryInterface;
         $this->ticketStatusHelper = $ticketStatusHelper;
         $this->customerRepositoryInterface = $customerRepositoryInterface;
+        $this->sortOrderBuilder = $sortOrderBuilder;
+        $this->searchCriteriaBuilderFactory = $searchCriteriaBuilderFactory;
+        $this->chatMessageCollection = $chatMessageCollection;
+        parent::__construct($context);
     }
 
     public function createTicket($chatId, $subject, $statusId = false,  $chatStatusLabel = false)
@@ -148,5 +178,55 @@ class ChatHelper extends AbstractHelper
                 'message' => $e->getMessage()
             ];
         }
+    }
+
+    /**
+     * @return int
+     */
+    public function getUnreadMessagesChatCondition()
+    {
+        $sortOrder = $this->sortOrderBuilder->setField('created_at')->setDirection('DESC')->create();
+        $searchCriteriaBuilder = $this->searchCriteriaBuilderFactory->create();
+        $searchCriteria = $searchCriteriaBuilder
+            ->setSortOrders([$sortOrder])
+            ->addFilter('status_id', $this->chatStatusHelper
+                ->getChatStatusId(ChatStatusHelper::ACTIVE_CHAT_STATUS))
+            ->create();
+        foreach ($this->chatRepository->getList($searchCriteria)->getItems() as $chat) {
+            $latestMessage = $this->chatMessageCollection->create()
+                ->addFieldToFilter(
+                    'chat_id',
+                    $chat->getChatId()
+                )->setOrder('created_at', 'DESC')
+                ->getFirstItem();
+            if (!$latestMessage->getIsRead() && !$latestMessage->getIsAdmin()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAllowedFileExtensions()
+    {
+        return $this->scopeConfig
+            ->getValue(
+                'live_chat/chat_files_upload/allowed_extensions',
+                \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            );
+    }
+
+    /**
+     * @return string
+     */
+    public function getMaximumFilesSize()
+    {
+        return $this->scopeConfig
+            ->getValue(
+                'live_chat/chat_files_upload/maximum_files_size',
+                \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            );
     }
 }

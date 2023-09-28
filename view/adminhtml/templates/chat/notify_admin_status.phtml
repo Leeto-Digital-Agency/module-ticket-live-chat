@@ -5,6 +5,7 @@
     $webBaseUrl = substr($helper->getWebBaseUrl(), strpos($helper->getWebBaseUrl(), "//") + 2, -1);
     $webSocketPort = $helper->getWebsocketPort();
     $isAdminLoggedIn = $helper->isBackendAdminLoggedIn();
+    $chatUnreadMessagesUrl = $helper->getBackendUrl('leeto_support/chat/unreadmessages');
 ?>
 <script type="text/x-magento-init">
 {
@@ -12,7 +13,8 @@
         "Leeto_TicketLiveChat/js/chat/notify-admin-status": {
             "webBaseUrl": "<?= $webBaseUrl ?>",
             "webSocketPort": "<?= $webSocketPort ?>",
-            "isAdminLoggedIn": "<?= $isAdminLoggedIn ?>"
+            "isAdminLoggedIn": "<?= $isAdminLoggedIn ?>",
+            "chatUnreadMessagesUrl": "<?= $chatUnreadMessagesUrl ?>"
         } 
     }
 } 

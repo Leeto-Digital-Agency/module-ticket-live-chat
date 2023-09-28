@@ -7,12 +7,16 @@ define([
 
     return Component.extend({
         initialize: async function (config) {
+            let self = this;
             this._super();
             this.setupElements(config);
             this.setupWebSocket();
             this.users = await this.getUsers();
             this.attachEventHandlers();
-            this.displayUserList();
+            self.usersLoadingDiv.css('display', 'flex');
+            this.displayUserList(function () {
+                self.usersLoadingDiv.hide();
+            });
             this.displayWelcomeMessage();
             this.selectedChatId = null;
         },
@@ -24,11 +28,15 @@ define([
             this.chatArea = $('#chat-admin-container .chat-area');
             this.chatMessages = $('#chat-admin-container .chat-messages');
             this.userName = $('#chat-admin-container .user-name');
+            this.chatLoadingDiv = $('#chat-admin-container .chat-area .loading-container');
+            this.usersLoadingDiv = $('#chat-admin-container .user-list-wrapper .loading-container');
             this.chatTextarea = $('#chat-admin-container .chat-input textarea');
             this.welcomeMessage = $('#chat-admin-container .welcome-message');
             this.fileInput = $('#chat-admin-container #file-input');
             this.statusSelect = $('#chat-admin-container #chat-status-list');
             this.statusModal = $('#status-update-modal');
+            this.allowedExtensions = config.allowedExtensions.split(',');
+            this.maxFilesSize = parseInt(config.maxFilesSize);
             this.getUsersUrl = config.getUsersUrl;
             this.updateChatHeaderUrl = config.updateChatHeaderUrl;
             this.changeChatStatusControllerUrl = config.changeChatStatusControllerUrl;
@@ -134,6 +142,8 @@ define([
 
         handleUserItemClick: async function (event) {
             let userItem = $(event.currentTarget);
+            let self = this;
+            this.chatLoadingDiv.css('display', 'flex');
             $('.user-item').removeClass('selected');
             this.welcomeMessage.hide();
             this.chatArea.show();
@@ -143,6 +153,9 @@ define([
 
             await this.updateUnreadMessages();
             this.fetchChatHeaderData();
+            this.fetchChatHeaderData(function () {
+                self.chatLoadingDiv.hide();
+            });
             this.scrollToBottom();
         },
 
@@ -154,6 +167,7 @@ define([
             this.statusModal.find('#modalNoBtn').off('click');
             this.statusModal.find('#modalYesBtn').on('click', function () {
                 let statusValue = target.val();
+                self.usersLoadingDiv.css('display', 'flex');
                 $.ajax({
                     url: self.changeChatStatusControllerUrl,
                     type: 'POST',
@@ -165,7 +179,9 @@ define([
                     success: function (response) {
                         self.statusModal.hide();
                         self.users = self.users.filter(user => user.id != self.selectedChatId);
-                        self.displayUserList();
+                        self.displayUserList(function () {
+                            self.usersLoadingDiv.hide();
+                        });
                         self.selectedChatId = null;
                         self.displayWelcomeMessage();
                     },
@@ -231,7 +247,7 @@ define([
             }
         },
 
-        displayUserList: function () {
+        displayUserList: function (callback) {
             this.userList.empty();
 
             this.users.forEach(user => {
@@ -279,6 +295,9 @@ define([
             });
 
             this.totalChats.text(this.users.length);
+            if (callback && typeof callback === 'function') {
+                callback();
+            }
         },
 
         adjustLatestMessage: function () {
@@ -372,12 +391,11 @@ define([
         },
 
         validateFile: function (file) {
-            let allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
-            let maxFileSize = 3 * 1024 * 1024; // 3 MB in bytes
+            let convertedMaxFilesSize = this.maxFilesSize * 1024 * 1024;
             let fileNameParts = file.name.split('.');
             let fileExtension = fileNameParts[fileNameParts.length - 1].toLowerCase();
 
-            return allowedExtensions.includes(fileExtension) && file.size <= maxFileSize;
+            return this.allowedExtensions.includes(fileExtension) && file.size <= convertedMaxFilesSize;
         },
 
         renderFile: function (originalName, filePath) {
@@ -442,7 +460,7 @@ define([
         },
 
         // Function to fetch data via AJAX and update chat-header
-        fetchChatHeaderData: function () {
+        fetchChatHeaderData: function (callback) {
             var self = this;
 
             $.ajax({
@@ -454,6 +472,9 @@ define([
                 },
                 success: function (response) {
                     self.updateChatHeader(response);
+                    if (callback && typeof callback === 'function') {
+                        callback();
+                    }
                 },
                 error: function (xhr, status, error) {
                     console.log(error);

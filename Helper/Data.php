@@ -189,6 +189,14 @@ class Data extends AbstractHelper
     {
         return $this->getScopeValue('live_chat/settings/websocket_port');
     }
+
+    /**
+     * @return string
+     */
+    public function getChatPosition()
+    {
+        return $this->getScopeValue('live_chat/settings/live_chat_position');
+    }
     
     /**
      * @return string

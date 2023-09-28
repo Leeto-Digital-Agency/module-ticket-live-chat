@@ -1,0 +1,11 @@
+<div id="custom-menu" style="display: none;"></div>
+
+<script type="text/x-magento-init">
+{
+    "#custom-menu": { 
+        "Leeto_TicketLiveChat/js/custom-menu": {
+            "ticketUnreadMessagesUrl": "<?= $escaper->escapeHtml($this->getTicketUnreadMessagesUrl()) ?>"
+        } 
+    }
+} 
+</script>

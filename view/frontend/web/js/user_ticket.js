@@ -17,6 +17,9 @@ define([
             this.messageControllerUrl = config.messageControllerUrl;
             this.addAdminMessageControllerUrl = config.addAdminMessageControllerUrl;
             this.openTicketStatusUrl = config.openTicketStatusUrl;
+            this.allowedExtensions = config.allowedExtensions.split(',');
+            this.maxFilesSize = parseInt(config.maxFilesSize);
+            this.maxFilesToUpload = parseInt(config.maxFilesToUpload);
             $('#ticket-user-container .chat-area').hide();
             this.displayChatAreaWithData(this);
         },
@@ -307,21 +310,23 @@ define([
             uploadedFileNames = []; // Clear the array for the next selection
         },
         validateFile: function (files) {
-            let allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
-            let maxFileSize = 15 * 1024 * 1024; // 15 MB in bytes
+            var self = this;
+            let convertedMaxFilesSize = this.maxFilesSize * 1024 * 1024;
             var filesSize = 0;
             let filesArray = Array.from(files);
-
+            if (filesArray.length > this.maxFilesToUpload) {
+                return false;
+            }
             for (let file of filesArray) {
                 let fileNameParts = file.name.split('.');
                 let fileExtension = fileNameParts[fileNameParts.length - 1].toLowerCase();
-                if (!allowedExtensions.includes(fileExtension)) {
+                if (!self.allowedExtensions.includes(fileExtension)) {
                     return false;
                 }
                 filesSize = filesSize + file.size;
             }
 
-            return filesSize <= maxFileSize;
+            return filesSize <= convertedMaxFilesSize;
         },
         validateTextarea: function () {
             const MAX_LENGTH = 2000;
@@ -373,7 +378,7 @@ define([
                 alertmessage.text(data.alertMessage);
                 self.chatMessages.append(alertmessage);
             } else {
-                messageTemplate.find('.icon .avatar img').attr('src', data.defaultImage);
+                messageTemplate.find('.icon .avatar img').attr('src', data.imageSrc);
                 messageTemplate.find('.details .subject').text(data.subject);
                 if (data.sender == 'admin') {
                     messageTemplate.find('.details .from').text("admin");

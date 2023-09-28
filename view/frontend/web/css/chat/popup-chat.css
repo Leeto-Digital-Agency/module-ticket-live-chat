@@ -4,8 +4,25 @@
 #chat-container {
     position: fixed;
     bottom: 20px;
-    right: 20px;
     z-index: 1000;
+}
+#chat-container.right {
+    right: 20px;
+}
+#chat-container.right .chat-popup {
+    right: 0px;
+}
+#chat-container.center {
+    right: calc(50% - 55px);
+}
+#chat-container.center .chat-popup {
+    right: calc(50% - 201px);
+}
+#chat-container.left {
+    left: 20px;
+}
+#chat-container.left .chat-popup {
+    left: 0px;
 }
 #chat-container .chat-button {
     border: none;
@@ -39,7 +56,6 @@
 #chat-container .chat-popup {
     position: absolute;
     bottom: calc(100% + 10px); /* Adjust the gap between button and popup */
-    right: 0;
     width: 400px;
     height: 600px;
     background-color: #fff;
@@ -345,12 +361,23 @@
     transition: background-color 0.2s ease-in-out;
 }
 @media (max-width: 480px) {
+    #chat-container.center {
+        right: 0;
+    }
+    #chat-container.center .chat-popup {
+        right: 0;
+    }
     #chat-container .chat-popup {
         bottom: -20px !important;
-        right: -20px;
         width: 100vw;
         height: 100vh;
         border-radius: 0;
+    }
+    #chat-container.right .chat-popup {
+        right: -20px;
+    }
+    #chat-container.left .chat-popup {
+        left: -20px;
     }
     #chat-container .chat-wrapper {
         max-height: 670px;

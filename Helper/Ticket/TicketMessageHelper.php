@@ -9,6 +9,7 @@ use Leeto\TicketLiveChat\Model\AttachmentFactory;
 use Leeto\TicketLiveChat\Model\ResourceModel\ChatMessage\CollectionFactory as ChatMessageCollection;
 use Leeto\TicketLiveChat\Model\ChatMessageFactory;
 use Leeto\TicketLiveChat\Helper\Ticket\TicketStatusHelper;
+use Leeto\TicketLiveChat\Helper\Ticket\TicketDataHelper;
 use Magento\Framework\Api\SortOrderBuilder;
 use Magento\Framework\Api\SearchCriteriaBuilderFactory;
 use Leeto\TicketLiveChat\Api\TicketRepositoryInterface;
@@ -94,6 +95,11 @@ class TicketMessageHelper extends AbstractHelper
     protected $image;
 
     /**
+     * @var TicketDataHelper
+     */
+    protected $ticketDataHelper;
+
+    /**
      * Construct
      *
      * @param TicketFactory                            $ticketFactory
@@ -110,6 +116,7 @@ class TicketMessageHelper extends AbstractHelper
      * @param ChatMessageAttachmentFactory             $chatMessageAttachmentFactory
      * @param ChatMessageAttachmentCollection          $chatMessageAttachmentCollection
      * @param Image                                    $image
+     * @param TicketDataHelper                         $ticketDataHelper
      */
     public function __construct(
         TicketFactory                          $ticketFactory,
@@ -125,7 +132,8 @@ class TicketMessageHelper extends AbstractHelper
         UrlInterface                           $urlInterface,
         ChatMessageAttachmentFactory           $chatMessageAttachmentFactory,
         ChatMessageAttachmentCollection        $chatMessageAttachmentCollection,
-        Image                                  $image
+        Image                                  $image,
+        TicketDataHelper                       $ticketDataHelper
     ) {
         $this->ticketFactory = $ticketFactory;
         $this->chatFactory = $chatFactory;
@@ -140,6 +148,7 @@ class TicketMessageHelper extends AbstractHelper
         $this->urlInterface = $urlInterface;
         $this->chatMessageAttachmentFactory = $chatMessageAttachmentFactory;
         $this->chatMessageAttachmentCollection = $chatMessageAttachmentCollection;
+        $this->ticketDataHelper = $ticketDataHelper;
         $this->image = $image;
     }
 
@@ -173,10 +182,13 @@ class TicketMessageHelper extends AbstractHelper
                 $data[] = $messageData;
                 continue;
             }
+            $imageSrc = $message->getIsAdmin() ? 
+                $this->ticketDataHelper->getAdminAvatarImagePath() :
+                $this->ticketDataHelper->getUserAvatarImagePath();
             $messageData['sender'] = $message->getIsAdmin() ? 'admin' : 'user';
             $messageData['files'] = $this->getMessageAttachments($records);
             $messageData['message'] = $message->getMessage() ? $message->getMessage() : '';
-            $messageData['defaultImage'] = $this->image->getDefaultPlaceholderUrl('image');
+            $messageData['imageSrc'] = $imageSrc;
             $messageData['userEmail'] = $chat->getEmail();
             $messageData['subject'] = $ticket->getSubject();
             $data[] = $messageData;
@@ -319,7 +331,6 @@ class TicketMessageHelper extends AbstractHelper
         $sortOrder = $this->sortOrderBuilder->setField('created_at')->setDirection('DESC')->create();
         $searchCriteriaBuilder = $this->searchCriteriaBuilderFactory->create();
         $searchCriteria = $searchCriteriaBuilder->setSortOrders([$sortOrder])->create();
-        $tickets = [];
         $totalUnreadMessagesFromTickets = 0;
         foreach ($this->ticketRepositoryInterface->getList($searchCriteria)->getItems() as $ticket) {
             $chatModel = $this->chatFactory->create();
@@ -329,7 +340,7 @@ class TicketMessageHelper extends AbstractHelper
                 $chatId
             )->setOrder('message_id', 'DESC')
             ->getFirstItem();
-            if (!$latestMessage->getIsAdmin()) {
+            if (!$latestMessage->getIsAdmin() && !$latestMessage->getIsAlert()) {
                 $totalUnreadMessagesFromTickets++;
             }
         }

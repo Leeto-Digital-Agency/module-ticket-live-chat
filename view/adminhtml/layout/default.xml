@@ -1,10 +1,11 @@
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
-    <!-- <head>
-        <script src="Leeto_TicketLiveChat::js/chat/notify-admin-status.js"/>
-    </head> -->
+    <head>
+        <css src="Leeto_TicketLiveChat::css/custom-menu.css"/>
+    </head>
     <body>
         <referenceContainer name="root">
             <block class="Magento\Backend\Block\Template" name="leeto_custom_chat_list" template="Leeto_TicketLiveChat::chat/notify_admin_status.phtml"/>
+            <block class="Leeto\TicketLiveChat\Block\Adminhtml\UnreadMessages" name="custom_menu" template="Leeto_TicketLiveChat::custom-menu.phtml"/>
         </referenceContainer>
     </body>
 </page>
