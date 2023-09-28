@@ -33,8 +33,8 @@ define([
             };
             self.conn.onmessage = (event) => {
                 let data = JSON.parse(event.data);
-                if (data.newAdminMessage) {
-
+                if (data.newMessage) {
+                    self.checkChatUnreadMessages();
                 }
             };
         },

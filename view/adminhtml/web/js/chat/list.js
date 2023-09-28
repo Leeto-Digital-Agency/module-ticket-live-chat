@@ -594,6 +594,10 @@ define([
                 errorMessagesSection.append(errorMessage);
             }
             this.chatArea.append(errorMessagesSection);
+            let selectedUser = this.getSelectedUser();
+            selectedUser.messages.pop();
+            this.adjustLatestMessage();
+            this.scrollToBottom();
         }
     });
 });

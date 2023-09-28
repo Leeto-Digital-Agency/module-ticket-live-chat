@@ -18,6 +18,7 @@ use Leeto\TicketLiveChat\Helper\Data;
 use Leeto\TicketLiveChat\Helper\Chat\ChatStatusHelper;
 use Leeto\TicketLiveChat\Helper\Chat\ChatHelper;
 use Leeto\TicketLiveChat\Model\ChatMessageAttachmentFactory;
+use Magento\Framework\Serialize\Serializer\Json;
 
 class ChatServer implements MessageComponentInterface
 {
@@ -105,7 +106,12 @@ class ChatServer implements MessageComponentInterface
      * @var ChatMessageAttachmentFactory
      */
     protected $chatMessageAttachmentFactory;
-    
+
+    /**
+     * @var Json
+     */
+    protected $jsonSerializer;
+
     /**
      * @param ChatRepositoryInterface                  $chatRepository
      * @param ChatInterfaceFactory                     $chatInterfaceFactory
@@ -121,6 +127,7 @@ class ChatServer implements MessageComponentInterface
      * @param ChatStatusHelper                         $chatStatusHelper
      * @param ChatHelper                               $chatHelper
      * @param ChatMessageAttachmentFactory             $chatMessageAttachmentFactory
+     * @param Json                                     $jsonSerializer
      */
     public function __construct(
         ChatRepositoryInterface                  $chatRepository,
@@ -136,7 +143,8 @@ class ChatServer implements MessageComponentInterface
         Data                                     $helper,
         ChatStatusHelper                         $chatStatusHelper,
         ChatHelper                               $chatHelper,
-        ChatMessageAttachmentFactory             $chatMessageAttachmentFactory
+        ChatMessageAttachmentFactory             $chatMessageAttachmentFactory,
+        Json                                     $jsonSerializer
     ) {
         $this->clients = new \SplObjectStorage();
         $this->chatRepository = $chatRepository;
@@ -153,6 +161,7 @@ class ChatServer implements MessageComponentInterface
         $this->chatStatusHelper = $chatStatusHelper;
         $this->chatHelper = $chatHelper;
         $this->chatMessageAttachmentFactory = $chatMessageAttachmentFactory;
+        $this->jsonSerializer = $jsonSerializer;
     }
 
     /**
@@ -217,7 +226,7 @@ class ChatServer implements MessageComponentInterface
         try {
             $result = $this->validateData($data);
             if (!empty($result)) {
-                $from->send(json_encode($result));
+                $from->send($this->jsonSerializer->serialize($result));
                 return;
             }
 
@@ -279,7 +288,8 @@ class ChatServer implements MessageComponentInterface
             }
             if ($newChatMessage) {
                 $this->updateChat($chatId);
-                $dataToSend = json_encode([
+                $dataToSend = $this->jsonSerializer->serialize([
+                    'newMessage' => true,
                     'chatId' => $chatId,
                     'message' => $data['message'],
                     'type' => $data['type'],
@@ -396,7 +406,7 @@ class ChatServer implements MessageComponentInterface
     public function notifyUserAdminStatus(ConnectionInterface $conn)
     {
         $adminStatus = $this->getAdminStatus();
-        $dataToSend = json_encode([
+        $dataToSend = $this->jsonSerializer->serialize([
             'adminStatus' => $adminStatus,
             'message' => 'success',
         ]);
@@ -410,7 +420,7 @@ class ChatServer implements MessageComponentInterface
     public function notifyUsersAdminStatus()
     {
         $adminStatus = $this->getAdminStatus();
-        $dataToSend = json_encode([
+        $dataToSend = $this->jsonSerializer->serialize([
             'adminStatus' => $adminStatus,
             'message' => 'success',
         ]);
@@ -477,7 +487,7 @@ class ChatServer implements MessageComponentInterface
 
         if (isset($this->clientsChatConnectionMapping[$chatId])) {
             $client = $this->clientsChatConnectionMapping[$chatId];
-            $client->send(json_encode($data));
+            $client->send($this->jsonSerializer->serialize($data));
         }
     }
 
