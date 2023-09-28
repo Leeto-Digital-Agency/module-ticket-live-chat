@@ -9,7 +9,10 @@ define([
         initialize: function (config) {
             this._super();
             $(document).ready(function () {
-                var uploadedFileNames = config.uploadedFileNames;
+                var uploadedFiles = $('#uploaded-files-list');
+                var allowedExtensions = config.allowedExtensions.split(',');
+                var maxFilesSize = parseInt(config.maxFilesSize);
+                var maxFilesToUpload = parseInt(config.maxFilesToUpload);
                 $('input[name="ticket_type"]').on('change', function () {
                     var selectedValue = $(this).val();
                     if (selectedValue == 2) {
@@ -32,15 +35,15 @@ define([
 
                 $('#attachments').on('change', function (event) {
                     var selectedFiles = event.target.files;
-
+                    var uploadedFileNames = [];
                     // Update uploadedFileNames with new file names
                     for (var i = 0; i < selectedFiles.length; i++) {
                         uploadedFileNames.push(selectedFiles[i].name);
                     }
 
                     // Update displayed file names
-                    $('#uploaded-files-list').text('');
-                    $('#uploaded-files-list').text(uploadedFileNames.join(', '));
+                    uploadedFiles.text('');
+                    uploadedFiles.text(uploadedFileNames.join(', '));
                     uploadedFileNames = []; // Clear the array for the next selection
                 });
 
@@ -65,14 +68,12 @@ define([
                     // Validate File Upload
                     var fileInput = $('#attachments');
                     if (fileInput.length) {
-                        var allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
                         var files = fileInput[0].files;
-
-                        var maxFileSize = 15 * 1024 * 1024; // 15 MB in bytes
+                        var convertedFilesSize = maxFilesSize * 1024 * 1024;
                         var totalFileSize = 0;
                         
-                        if (files.length > 5) {
-                            $('#attachments-error').text('You can only upload up to five files.');
+                        if (files.length > maxFilesToUpload) {
+                            $('#attachments-error').text('You can only upload up to ' + maxFilesToUpload + ' files.');
                             isValid = false;
                         } else {
                             for (var i = 0; i < files.length; i++) {
@@ -85,8 +86,8 @@ define([
                                 }
                                 totalFileSize += files[i].size;
                             }
-                            if (totalFileSize > maxFileSize) {
-                                $('#attachments-error').text('Total file size should not exceed 15 MB.');
+                            if (totalFileSize > convertedFilesSize) {
+                                $('#attachments-error').text('Total file size should not exceed ' + maxFilesSize + ' MB.');
                                 isValid = false;
                             }
                         }

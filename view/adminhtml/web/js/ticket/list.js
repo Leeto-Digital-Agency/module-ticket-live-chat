@@ -17,6 +17,10 @@ define([
             this.addAdminMessageControllerUrl = config.addAdminMessageControllerUrl;
             this.changeTicketStatusControllerUrl = config.changeTicketStatusControllerUrl;
             this.showTicketsByStatusUrl = config.showTicketsByStatusUrl;
+            this.allowedExtensions = config.allowedExtensions;
+            this.maxFilesSize = config.maxFilesSize;
+            this.maxFilesToUpload = config.maxFilesToUpload;
+            this.adminAvatarImage = config.adminAvatarImage;
             this.activeTicketStatus = null;
         },
 
@@ -139,7 +143,7 @@ define([
             this.chatsInfo.find('.tickets-count').text(data.totalTickets + ' Tickets');
             data.data.forEach(element => {
                 let ticketListTemplate = self.getTicketListTemplate();
-                ticketListTemplate.find('.user-avatar img').attr('src', element.defaultImage);
+                ticketListTemplate.find('.user-avatar img').attr('src', element.imageSrc);
                 let tikcetUserDiv = $('<h3></h3>');
                 tikcetUserDiv.text(element.username);
                 ticketListTemplate.find('.user-details').append(tikcetUserDiv);
@@ -261,7 +265,7 @@ define([
             let files = this.fileInput[0].files;
             messageText = messageText.replace(/\n/g, '<br>');
             var self = this;
-            let filesData = await this.getFiles(files);
+            let filesData = await this.getFiles(files); 
             
             if (this.validateTextarea()) {
                 return;
@@ -294,11 +298,16 @@ define([
                     self.adjustTextareaHeight();
                     self.fileInput.val('');
                     self.uploadedFiles.text('');
+                    self.updateTicketImage();
                 },
                 error: function (xhr, status, error) {
                     console.log(error);
                 }
             });
+        },
+        updateTicketImage: function () {
+            let selectedTicket = $(".user-item.selected");
+            selectedTicket.find('.user-avatar img').attr('src', this.adminAvatarImage);
         },
         getFiles: async function (files) {
             let filesData = [];
@@ -360,21 +369,23 @@ define([
             }
         },
         validateFile: function (files) {
-            let allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
-            let maxFileSize = 15 * 1024 * 1024; // 15 MB in bytes
+            var self = this;
+            let convertedMaxFilesSize = this.maxFilesSize * 1024 * 1024; // 15 MB in bytes
             var filesSize = 0;
             let filesArray = Array.from(files);
-
+            if (filesArray.length > this.maxFilesToUpload) {
+                return false;
+            }
             for (let file of filesArray) {
                 let fileNameParts = file.name.split('.');
                 let fileExtension = fileNameParts[fileNameParts.length - 1].toLowerCase();
-                if (!allowedExtensions.includes(fileExtension)) {
+                if (!self.allowedExtensions.includes(fileExtension)) {
                     return false;
                 }
                 filesSize = filesSize + file.size;
             }
 
-            return filesSize <= maxFileSize;
+            return filesSize <= convertedMaxFilesSize;
         },
         validateTextarea: function () {
             const MAX_LENGTH = 2000;
@@ -432,7 +443,7 @@ define([
                     self.chatMessages.append(alertmessage);
                 } else {
                     let messageTemplate = self.getTicketMessageTemplate();
-                    messageTemplate.find('.icon .avatar img').attr('src', element.defaultImage);
+                    messageTemplate.find('.icon .avatar img').attr('src', element.imageSrc);
                     messageTemplate.find('.details .subject').text(element.subject);
                     if (element.sender == 'admin') {
                         messageTemplate.find('.details .from').text("admin");

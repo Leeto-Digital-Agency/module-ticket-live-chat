@@ -1,6 +1,11 @@
 <?php
-$ticket = $this->getTicket();
-$messages = $this->getTicketMessages();
+    $ticket = $this->getTicket();
+    $messages = $this->getTicketMessages();
+    $allowedExtensions = $this->getAllowedFileExtensions();
+    $maxFilesSize = $this->getMaximumFilesSize();
+    $maxFilesToUpload = $this->getMaximumFilesToUpload();
+    $userImage = $this->getUserImage();
+    $adminImage = $this->getAdminImage();
 ?>
 <div id="ticket-user-container" data-ticket-id="<?= $escaper->escapeHTML($ticket->getId()) ?>">
     <div class="loading-container">
@@ -36,9 +41,12 @@ $messages = $this->getTicketMessages();
                 <?php else: ?>
                     <div class="ticket-message">
                         <div class="dropdown-item">
+                            <?php
+                                $imageSrc = $message['sender'] == 'admin' ? $adminImage : $userImage;
+                            ?>
                             <div class="icon">
                                 <div class="avatar">
-                                    <img src="<?= $escaper->escapeHtml($this->getDefaultImage()) ?>" alt="User Image">
+                                    <img src="<?= $escaper->escapeHtml($imageSrc) ?>" alt="User Image">
                                 </div>
                             </div>
                             <?php
@@ -149,7 +157,10 @@ $messages = $this->getTicketMessages();
             "ticketControllerUrl": "<?= $escaper->escapeHtml($this->getTicketControllerUrl()) ?>",
             "messageControllerUrl": "<?= $escaper->escapeHtml($this->getMessageControllerUrl()) ?>",
             "addAdminMessageControllerUrl": "<?= $escaper->escapeHtml($this->getAddMessageControllerUrl()) ?>",
-            "openTicketStatusUrl": "<?= $escaper->escapeHtml($this->getOpenTicketStatusUrl()) ?>"
+            "openTicketStatusUrl": "<?= $escaper->escapeHtml($this->getOpenTicketStatusUrl()) ?>",
+            "allowedExtensions": "<?= $this->escapeHtml($allowedExtensions) ?>",
+            "maxFilesSize": "<?= $this->escapeHtml($maxFilesSize) ?>",
+            "maxFilesToUpload": "<?= $this->escapeHtml($maxFilesToUpload) ?>"
         } 
    }
 } 

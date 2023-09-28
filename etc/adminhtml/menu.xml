@@ -8,13 +8,13 @@
             sortOrder="20"
             action="leeto_support/ticket/index"
             resource="Magento_Backend::content"/>
-        <!-- <add id="Leeto_TicketLiveChat::leeto_tickets"
+        <add id="Leeto_TicketLiveChat::leeto_tickets"
             title="Tickets"
             module="Leeto_TicketLiveChat"
             sortOrder="40"
             parent="Leeto_TicketLiveChat::leeto_menu"
             action="leeto_support/ticket/index"
-            resource="Magento_Backend::content"/> -->
+            resource="Magento_Backend::content"/>
         <add id="Leeto_TicketLiveChat::leeto_chat"
             title="Live Chat"
             module="Leeto_TicketLiveChat"

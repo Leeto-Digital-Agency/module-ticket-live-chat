@@ -351,13 +351,15 @@
     padding: 10px;
 }
 #ticket-admin-container .chat-area .chat-messages .ticket-message .icon .avatar img {
-    max-width: 50px;
-    max-height: 50px;
+    height: 50px;
+    width: 50px;
     border-radius: 50%;
+    object-fit: cover;
 }
 #ticket-admin-container .chat-area .chat-messages .ticket-message .files {
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
 }
 #ticket-admin-container .chat-area .chat-messages .ticket-message .file-content .file-image {
     height: 100%;

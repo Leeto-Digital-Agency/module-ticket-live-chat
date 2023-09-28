@@ -1,9 +1,12 @@
 <?php
-$ticketTypes = $this->getTicketTypes();
-$orderTypeId = $this->getTicketOrderTypeId();
-$formInput = $this->getFormData();
-$sameEmail = 1;
-$differentEmail = 2;
+    $ticketTypes = $this->getTicketTypes();
+    $orderTypeId = $this->getTicketOrderTypeId();
+    $formInput = $this->getFormData();
+    $sameEmail = 1;
+    $differentEmail = 2;
+    $allowedExtensions = $this->getAllowedFileExtensions();
+    $maxFilesSize = $this->getMaximumFilesSize();
+    $maxFilesToUpload = $this->getMaximumFilesToUpload();
 ?>
 
 <div class="ticket-form-wrapper">
@@ -14,7 +17,7 @@ $differentEmail = 2;
         data-mage-init='{"validation":{}}'
         id="ticket-form" method="post" action="<?= $escaper->escapeUrl($block->getPostActionUrl()) ?>">
         <fieldset>
-            <legend><?= $this->escapeHtml(__('Select Ticket Type')) ?></legend>
+            <legend><?= $this->escapeHtml(__('Select Ticket Type:')) ?></legend>
             <div class="options radio-group">
                 <?php foreach ($ticketTypes as $ticketType):?>
                     <?php
@@ -108,7 +111,7 @@ $differentEmail = 2;
 
         <!-- Description Field -->
         <fieldset>
-            <legend><?= $this->escapeHtml(__('Description')) ?></legend>
+            <legend><?= $this->escapeHtml(__('Description:')) ?></legend>
             <label>
                 <textarea name="description" rows="4"
                     required='true'
@@ -209,14 +212,14 @@ $differentEmail = 2;
         <button type="submit"><?= $this->escapeHtml(__('Submit')) ?></button>
     </form>
 </div>
-<?php
-    $uploadFileNamesJs = json_encode($formInput['uploaded_file_names'] ?? []);
-?>
+
 <script type="text/x-magento-init">
 {
    "#ticket-form": {
         "Leeto_TicketLiveChat/js/ticket-form": {
-            "uploadedFileNames": <?= $this->escapeHtml($uploadFileNamesJs) ?>
+            "allowedExtensions": "<?= $this->escapeHtml($allowedExtensions) ?>",
+            "maxFilesSize": "<?= $this->escapeHtml($maxFilesSize) ?>",
+            "maxFilesToUpload": "<?= $this->escapeHtml($maxFilesToUpload) ?>"
         }
    }
 }

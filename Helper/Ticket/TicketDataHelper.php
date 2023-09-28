@@ -16,9 +16,26 @@ use Leeto\TicketLiveChat\Model\ResourceModel\Ticket\CollectionFactory as TicketC
 use Magento\Catalog\Helper\Image;
 use Leeto\TicketLiveChat\Model\Chat;
 use Leeto\TicketLiveChat\Model\ResourceModel\ChatMessage\CollectionFactory as ChatMessageCollection;
+use Magento\Framework\App\Helper\Context;
+use Leeto\TicketLiveChat\Helper\Data;
 
 class TicketDataHelper extends AbstractHelper
 {
+    /**
+     * @var string
+     */
+    public const XML_PATH_USER_AVATAR_IMAGE = 'support/ticket/user_avatar_image';
+
+    /**
+     * @var string
+     */
+    public const AVATAR_IMAGE_PATH = 'avatar';
+
+    /**
+     * @var string
+     */
+    public const XML_PATH_ADMIN_AVATAR_IMAGE = 'support/ticket/admin_avatar_image';
+
     /**
      * @var TicketFactory
      */
@@ -85,8 +102,14 @@ class TicketDataHelper extends AbstractHelper
     protected $chatMessageCollection;
 
     /**
+     * @var Data
+     */
+    protected $dataHelper;
+
+    /**
      * Construct
      *
+     * @param Context                 $context
      * @param TicketFactory           $ticketFactory
      * @param TicketStatusFactory     $ticketStatusFactory
      * @param TicketStatusHelper      $ticketStatusHelper
@@ -100,8 +123,10 @@ class TicketDataHelper extends AbstractHelper
      * @param Image                   $imageHelper
      * @param Chat                    $chatModel
      * @param ChatMessageCollection   $chatMessageCollection
+     * @param Data                    $dataHelper
      */
     public function __construct(
+        Context                 $context,
         TicketFactory           $ticketFactory,
         TicketStatusFactory     $ticketStatusFactory,
         TicketStatusHelper      $ticketStatusHelper,
@@ -114,8 +139,10 @@ class TicketDataHelper extends AbstractHelper
         TicketCollectionFactory $ticketCollectionFactory,
         Image                   $imageHelper,
         Chat                    $chatModel,
-        ChatMessageCollection   $chatMessageCollection
+        ChatMessageCollection   $chatMessageCollection,
+        Data                    $dataHelper
     ) {
+        parent::__construct($context);
         $this->ticketFactory = $ticketFactory;
         $this->ticketStatusFactory = $ticketStatusFactory;
         $this->ticketStatusHelper = $ticketStatusHelper;
@@ -129,6 +156,7 @@ class TicketDataHelper extends AbstractHelper
         $this->imageHelper = $imageHelper;
         $this->chatModel = $chatModel;
         $this->chatMessageCollection = $chatMessageCollection;
+        $this->dataHelper = $dataHelper;
     }
 
     /**
@@ -210,10 +238,11 @@ class TicketDataHelper extends AbstractHelper
             $ticketModel = $this->ticketFactory->create()->load($ticket->getId());
             $customer = $customerModel->load($ticketModel->getCustomerId());
             $ticketData['ticketId'] = $ticket->getId();
-            $ticketData['defaultImage'] = $this->imageHelper->getDefaultPlaceholderUrl('image');
             $ticketData['username'] = 'Guest';
             $ticketData['latestMessage'] = $this->getLatestMessageData($ticket->getId());
-
+            $ticketData['imageSrc'] = $ticketData['latestMessage']['isAdmin'] ?
+                $this->getAdminAvatarImagePath() :
+                $this->getUserAvatarImagePath();
             if ($ticketModel->getCustomerId() && $customer && $customer->getId()) {
                 $ticketData['username'] = $customer->getFirstname() . ' ' . $customer->getLastname();
             }
@@ -244,5 +273,50 @@ class TicketDataHelper extends AbstractHelper
             'latest_message' => $latestMessage->getMessage() ? $latestMessage->getMessage() : 'Attachment'
         ];
         return $latestMessageData;
+    }
+
+     /**
+     * @return string
+     */
+    public function getUserAvatarImagePath()
+    {
+        if ($this->getScopeValue(self::XML_PATH_USER_AVATAR_IMAGE)) {
+            return $this->getMediaBaseUrl() .
+                self::AVATAR_IMAGE_PATH . '/' .
+                $this->getScopeValue(self::XML_PATH_USER_AVATAR_IMAGE);
+        }
+
+        return $this->dataHelper->getDefaultImage();
+    }
+
+    /**
+     * @return string
+     */
+    public function getAdminAvatarImagePath()
+    {
+        if ($this->getScopeValue(self::XML_PATH_ADMIN_AVATAR_IMAGE)) {
+            return $this->getMediaBaseUrl() .
+                self::AVATAR_IMAGE_PATH . '/' .
+                $this->getScopeValue(self::XML_PATH_ADMIN_AVATAR_IMAGE);
+        }
+
+        return $this->dataHelper->getDefaultImage();
+    }
+
+    /**
+     * @param string $path
+     * @return string|null
+     */
+    public function getScopeValue($path)
+    {
+        return $this->scopeConfig->getValue($path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE) ?? null;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMediaBaseUrl()
+    {
+        return $this->_urlBuilder->getBaseUrl(['_type' => \Magento\Framework\UrlInterface::URL_TYPE_MEDIA]);
     }
 }

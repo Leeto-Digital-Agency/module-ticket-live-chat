@@ -1,0 +1,20 @@
+.admin__menu .item-leeto-menu.parent.level-0 a.unread-messages::after {
+    content: "";
+    width: 8px;
+    height: 8px;
+    background-color: rgb(81, 81, 255);
+    display: block;
+    position: absolute;
+    right: 20px;
+    top: 10px;
+    border-radius: 50%;
+}
+.admin__menu .item-leeto-tickets.level-1 a.unread-messages,
+.admin__menu .item-leeto-chat.level-1 a.unread-messages {
+    position: relative;
+}
+.admin__menu .item-leeto-tickets.level-1 a.unread-messages::after,
+.admin__menu .item-leeto-chat.level-1 a.unread-messages::after {
+    right: 10px!important;
+    top: 18px!important;
+}

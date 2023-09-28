@@ -10,6 +10,8 @@ use Leeto\TicketLiveChat\Model\ResourceModel\ChatMessage\CollectionFactory as Ch
 use Leeto\TicketLiveChat\Model\Chat;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Leeto\TicketLiveChat\Helper\Ticket\TicketMessageHelper;
+use Leeto\TicketLiveChat\Helper\Ticket\FileValidationHelper;
+use Leeto\TicketLiveChat\Helper\Ticket\TicketDataHelper;
 
 class View extends Template
 {
@@ -44,6 +46,16 @@ class View extends Template
     protected $ticketMessageHelper;
 
     /**
+     * @var FileValidationHelper
+     */
+    protected $fileValidationHelper;
+
+    /**
+     * @var TicketDataHelper
+     */
+    protected $ticketDataHelper;
+
+    /**
      * Construct
      *
      * @param Context                   $context
@@ -53,6 +65,8 @@ class View extends Template
      * @param Chat                      $chatModel
      * @param EncryptorInterface        $encryptorInterface
      * @param TicketMessageHelper       $ticketMessageHelper
+     * @param FileValidationHelper      $fileValidationHelper
+     * @param TicketDataHelper          $ticketDataHelper
      * @param array                     $data
      */
     public function __construct(
@@ -63,6 +77,8 @@ class View extends Template
         Chat                        $chatModel,
         EncryptorInterface          $encryptorInterface,
         TicketMessageHelper         $ticketMessageHelper,
+        FileValidationHelper        $fileValidationHelper,
+        TicketDataHelper            $ticketDataHelper,
         array                       $data = []
     ) {
         $this->ticketFactory = $ticketFactory;
@@ -71,6 +87,8 @@ class View extends Template
         $this->chatModel = $chatModel;
         $this->encryptorInterface = $encryptorInterface;
         $this->ticketMessageHelper = $ticketMessageHelper;
+        $this->fileValidationHelper = $fileValidationHelper;
+        $this->ticketDataHelper = $ticketDataHelper;
         parent::__construct($context, $data);
     }
 
@@ -153,5 +171,45 @@ class View extends Template
     public function getOpenTicketStatusUrl()
     {
         return $this->_urlBuilder->getUrl('support/ticket/openticket');
+    }
+
+    /**
+     * @return string
+     */
+    public function getAllowedFileExtensions()
+    {
+        return $this->fileValidationHelper->getAllowedFileExtensions();
+    }
+
+    /**
+     * @return string
+     */
+    public function getMaximumFilesSize()
+    {
+        return $this->fileValidationHelper->getMaximumFilesSize();
+    }
+
+    /**
+     * @return string
+     */
+    public function getMaximumFilesToUpload()
+    {
+        return $this->fileValidationHelper->getMaximumFilesToUpload();
+    }
+
+    /**
+     * @return string
+     */
+    public function getUserImage()
+    {
+        return $this->ticketDataHelper->getUserAvatarImagePath();
+    }
+
+    /**
+     * @return string
+     */
+    public function getAdminImage()
+    {
+        return $this->ticketDataHelper->getAdminAvatarImagePath();
     }
 }

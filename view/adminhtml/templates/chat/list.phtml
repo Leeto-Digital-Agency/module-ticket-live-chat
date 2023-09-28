@@ -3,6 +3,9 @@
 ?>
 <div id="chat-admin-container">
     <div class="user-list-wrapper">
+        <div class="loading-container">
+            <div class="loading-circle"></div>
+        </div>
         <div class="chats-info">
             <p><?= $escaper->escapeHtml(__('My Chats')) ?></p>
             <p><?= $escaper->escapeHtml(__('Total Chats:')) ?> <span class="total-chats"></span></p>
@@ -13,6 +16,9 @@
     </div>
     <h1 class="welcome-message" style="display: none;"></h1>
     <div class="chat-area">
+        <div class="loading-container">
+            <div class="loading-circle"></div>
+        </div>
         <div class="chat-header">
             <!-- <h2><?= $escaper->escapeHtml(__('Chat with')) ?><span class="user-name"></span></h2> -->
             <div class="left-info">
@@ -102,6 +108,8 @@
     $userAvatarImagePath = $helper->getUserAvatarImagePath();
     $webBaseUrl = substr($helper->getWebBaseUrl(), strpos($helper->getWebBaseUrl(), "//") + 2, -1);
     $webSocketPort = $helper->getWebsocketPort();
+    $allowedExtensions = $this->getAllowedFileExtensions();
+    $maxFilesSize = $this->getMaximumFilesSize();
 ?>
 
 <script type="text/x-magento-init">
@@ -114,7 +122,9 @@
             "updateUnreadChatMessages": "<?= $updateUnreadChatMessages ?>",
             "userAvatarImagePath": "<?= $userAvatarImagePath ?>",
             "webBaseUrl": "<?= $webBaseUrl ?>",
-            "webSocketPort": "<?= $webSocketPort ?>"
+            "webSocketPort": "<?= $webSocketPort ?>",
+            "allowedExtensions": "<?= $this->escapeHtml($allowedExtensions) ?>",
+            "maxFilesSize": "<?= $this->escapeHtml($maxFilesSize) ?>"
         } 
     }
 } 

@@ -3,9 +3,19 @@
 namespace Leeto\TicketLiveChat\Helper\Ticket;
 
 use Magento\Framework\App\Helper\AbstractHelper;
+use Magento\Framework\App\Helper\Context;
 
 class FileValidationHelper extends AbstractHelper
 {
+    /**
+    * @param Context $context
+    */
+    public function __construct(
+        Context $context,
+    ) {
+        parent::__construct($context);
+    }
+
     /**
      * @param array $filesData
      * @return array
@@ -15,7 +25,9 @@ class FileValidationHelper extends AbstractHelper
         $isValid = true;
         $errorMessage = '';
         $filesSize = 0;
-        $maxFileSize = 15 * 1024 * 1024;
+        $maxFileSize = $this->getMaximumFilesSize();
+        // converted to bytes
+        $maxFileSizeConverted = $maxFileSize * 1024 * 1024;
         $resultData = [
             'success' => $isValid,
             'errorMessage' => $errorMessage,
@@ -26,7 +38,7 @@ class FileValidationHelper extends AbstractHelper
             $fileNameParts = explode('.', $fileName);
             $fileType = end($fileNameParts);
             $fileSize = $fileInfo[2];
-            $allowedTypes = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
+            $allowedTypes = explode(',', $this->getAllowedFileExtensions());
 
             if (!in_array($fileType, $allowedTypes)) {
                 $isValid = false;
@@ -40,7 +52,7 @@ class FileValidationHelper extends AbstractHelper
             $filesSize += $fileSize;
         }
 
-        if ($filesSize > $maxFileSize) {
+        if ($filesSize > $maxFileSizeConverted) {
             $resultData = [
                 'error' => true,
                 'message' => 'Maximum files size exceeded!'
@@ -48,5 +60,29 @@ class FileValidationHelper extends AbstractHelper
         }
 
         return $resultData;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAllowedFileExtensions()
+    {
+        return $this->scopeConfig->getValue('support/ticket_files_upload/allowed_extensions', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+    }
+
+    /**
+     * @return string
+     */
+    public function getMaximumFilesSize()
+    {
+        return $this->scopeConfig->getValue('support/ticket_files_upload/maximum_files_size', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+    }
+
+    /**
+     * @return string
+     */
+    public function getMaximumFilesToUpload()
+    {
+        return $this->scopeConfig->getValue('support/ticket_files_upload/maximum_files', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 }

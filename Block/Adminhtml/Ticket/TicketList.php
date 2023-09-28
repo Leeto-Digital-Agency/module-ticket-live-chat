@@ -13,6 +13,8 @@ use Leeto\TicketLiveChat\Model\Chat;
 use Leeto\TicketLiveChat\Model\ResourceModel\ChatMessage\CollectionFactory as ChatMessageCollection;
 use Leeto\TicketLiveChat\Helper\Ticket\TicketStatusHelper;
 use Magento\Framework\Api\SortOrderBuilder;
+use Leeto\TicketLiveChat\Helper\Ticket\FileValidationHelper;
+use Leeto\TicketLiveChat\Helper\Ticket\TicketDataHelper;
 
 class TicketList extends Template
 {
@@ -62,6 +64,16 @@ class TicketList extends Template
     protected $sortOrderBuilder;
 
     /**
+     * @var FileValidationHelper
+     */
+    protected $fileValidationHelper;
+
+    /**
+     * @var TicketDataHelper
+     */
+    protected $ticketDataHelper;
+
+    /**
      * @param Context                           $context
      * @param array                             $data
      * @param TicketRepositoryInterface         $ticketRepositoryInterface
@@ -73,6 +85,8 @@ class TicketList extends Template
      * @param ChatMessageCollection             $chatMessageCollection
      * @param TicketStatusHelper                $ticketStatusHelper
      * @param SortOrderBuilder                  $sortOrderBuilder
+     * @param FileValidationHelper              $fileValidationHelper
+     * @param TicketDataHelper                  $ticketDataHelper
      */
     public function __construct(
         Context                             $context,
@@ -85,6 +99,8 @@ class TicketList extends Template
         ChatMessageCollection               $chatMessageCollection,
         TicketStatusHelper                  $ticketStatusHelper,
         SortOrderBuilder                    $sortOrderBuilder,
+        FileValidationHelper                $fileValidationHelper,
+        TicketDataHelper                    $ticketDataHelper,
         array                               $data = []
     ) {
         $this->ticketRepositoryInterface = $ticketRepositoryInterface;
@@ -96,6 +112,8 @@ class TicketList extends Template
         $this->chatMessageCollection = $chatMessageCollection;
         $this->ticketStatusHelper = $ticketStatusHelper;
         $this->sortOrderBuilder = $sortOrderBuilder;
+        $this->fileValidationHelper = $fileValidationHelper;
+        $this->ticketDataHelper = $ticketDataHelper;
         parent::__construct($context, $data);
     }
 
@@ -194,5 +212,37 @@ class TicketList extends Template
     public function getTicketStatuses()
     {
         return $this->ticketStatusHelper->getTicketStatuses();
+    }
+
+    /**
+     * @return string
+     */
+    public function getAllowedFileExtensions()
+    {
+        return $this->fileValidationHelper->getAllowedFileExtensions();
+    }
+
+    /**
+     * @return string
+     */
+    public function getMaximumFilesSize()
+    {
+        return $this->fileValidationHelper->getMaximumFilesSize();
+    }
+
+    /**
+     * @return string
+     */
+    public function getMaximumFilesToUpload()
+    {
+        return $this->fileValidationHelper->getMaximumFilesToUpload();
+    }
+
+    /**
+     * @return string
+     */
+    public function getAdminAvatarImage()
+    {
+        return $this->ticketDataHelper->getAdminAvatarImagePath();
     }
 }
