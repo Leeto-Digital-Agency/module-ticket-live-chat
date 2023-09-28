@@ -96,7 +96,7 @@ class GetChatId extends Action
         }
     }
 
-      /**
+    /**
      * @param $userId
      * @param $email
      * @param $uuid

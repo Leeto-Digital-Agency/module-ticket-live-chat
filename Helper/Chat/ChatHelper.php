@@ -2,6 +2,7 @@
 
 namespace Leeto\TicketLiveChat\Helper\Chat;
 
+use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Psr\Log\LoggerInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -12,7 +13,9 @@ use Leeto\TicketLiveChat\Api\Data\TicketInterfaceFactory;
 use Leeto\TicketLiveChat\Helper\Ticket\TicketTypeHelper;
 use Leeto\TicketLiveChat\Helper\Ticket\TicketStatusHelper;
 use Magento\Customer\Api\CustomerRepositoryInterface;
-
+use Magento\Framework\Encryption\EncryptorInterface;
+use Magento\Framework\Api\SearchCriteriaBuilder;
+use Leeto\TicketLiveChat\Api\Data\ChatInterfaceFactory;
 
 class ChatHelper extends AbstractHelper
 {
@@ -57,6 +60,22 @@ class ChatHelper extends AbstractHelper
     protected $customerRepositoryInterface;
 
     /**
+     * @var EncryptorInterface
+     */
+    protected $encryptorInterface;
+
+    /**
+     * @var SearchCriteriaBuilder
+     */
+    protected $searchCriteriaBuilder;
+
+    /**
+     * @var ChatInterfaceFactory
+     */
+    protected $chatInterfaceFactory;
+
+    /**
+     * @param Context                      $context
      * @param LoggerInterface              $logger
      * @param ChatRepositoryInterface      $chatRepository
      * @param ChatStatusHelper             $chatStatusHelper
@@ -65,8 +84,12 @@ class ChatHelper extends AbstractHelper
      * @param TicketRepositoryInterface    $ticketRepositoryInterface
      * @param TicketStatusHelper           $ticketStatusHelper
      * @param CustomerRepositoryInterface  $customerRepositoryInterface
+     * @param EncryptorInterface           $encryptorInterface
+     * @param SearchCriteriaBuilder        $searchCriteriaBuilder
+     * @param ChatInterfaceFactory         $chatInterfaceFactory
      */
     public function __construct(
+        Context                      $context,
         LoggerInterface              $logger,
         ChatRepositoryInterface      $chatRepository,
         ChatStatusHelper             $chatStatusHelper,
@@ -74,8 +97,12 @@ class ChatHelper extends AbstractHelper
         TicketTypeHelper             $ticketTypeHelper,
         TicketRepositoryInterface    $ticketRepositoryInterface,
         TicketStatusHelper           $ticketStatusHelper,
-        CustomerRepositoryInterface  $customerRepositoryInterface
+        CustomerRepositoryInterface  $customerRepositoryInterface,
+        EncryptorInterface           $encryptorInterface,
+        SearchCriteriaBuilder        $searchCriteriaBuilder,
+        ChatInterfaceFactory         $chatInterfaceFactory
     ) {
+        parent::__construct($context);
         $this->logger = $logger;
         $this->chatRepository = $chatRepository;
         $this->chatStatusHelper = $chatStatusHelper;
@@ -84,6 +111,9 @@ class ChatHelper extends AbstractHelper
         $this->ticketRepositoryInterface = $ticketRepositoryInterface;
         $this->ticketStatusHelper = $ticketStatusHelper;
         $this->customerRepositoryInterface = $customerRepositoryInterface;
+        $this->encryptorInterface = $encryptorInterface;
+        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
+        $this->chatInterfaceFactory = $chatInterfaceFactory;
     }
 
     public function createTicket($chatId, $subject, $statusId = false,  $chatStatusLabel = false)
@@ -125,10 +155,13 @@ class ChatHelper extends AbstractHelper
                 $chat->setTicketId($ticket->getEntityId());
                 $chat->setStatusId($this->chatStatusHelper->getChatStatusId(ChatStatusHelper::CLOSED_CHAT_STATUS));
                 $this->chatRepository->save($chat);
+                // create ticket url
+                $encryptedTicketId = $this->encryptorInterface->encrypt($ticket->getEntityId());
+                $ticketUrl = $this->_urlBuilder->getUrl('support/ticket/view', ['ticket_id' => $encryptedTicketId]);
                 return [
                     'success' => true,
                     'message' =>  __('Ticket created successfully'),
-                    'ticketId' => $ticket->getEntityId()
+                    'ticketUrl' => $ticketUrl
                 ];
             }
 
@@ -147,6 +180,88 @@ class ChatHelper extends AbstractHelper
                 'success' => false,
                 'message' => $e->getMessage()
             ];
+        }
+    }
+
+        /**
+     * @param $userId
+     * @param $email
+     * @param $uuid
+     * @return ChatInterface|null
+     */
+    public function getChat($userId, $email, $uuid, $chatId = null)
+    {
+        $chatRepositoryItem = null;
+        $activeChatStatusId = $this->chatStatusHelper
+            ->getChatStatusId(ChatStatusHelper::ACTIVE_CHAT_STATUS);
+        $searchCriteria = $this->searchCriteriaBuilder
+            ->addFilter('status_id', $activeChatStatusId, 'eq')
+            ->setPageSize(1);
+
+        if ($chatId) {
+            $searchCriteria = $searchCriteria
+                ->addFilter('chat_id', $chatId, 'eq');
+        } elseif ($userId) {
+            $searchCriteria = $searchCriteria
+                ->addFilter('customer_id', $userId, 'eq');
+        } elseif ($uuid && $email) {
+            $searchCriteria = $searchCriteria
+                ->addFilter('email', $email, 'eq');
+        } elseif ($uuid && !$email) {
+            $searchCriteria = $searchCriteria
+                ->addFilter('uuid', $uuid, 'eq');
+        }
+
+        $chatRepositoryItem = $this->chatRepository->getList($searchCriteria->create())->getItems();
+        if (count($chatRepositoryItem)) {
+            $chatRepositoryItem = $chatRepositoryItem[0];
+            if ($chatId || $chatRepositoryItem->getUuid() === $uuid) {
+                return $chatRepositoryItem;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param $userId
+     * @param $email
+     * @param $uuid
+     * @return ChatInterface
+     */
+    public function getOrCreateChat($userId, $email, $uuid)
+    {
+        $chat = $this->getChat($userId, $email, $uuid);
+        if ($chat && $chat->getChatId()) {
+            return $chat;
+        }
+
+        return $this->createChat($userId, $email, $uuid);
+    }
+
+    /**
+     * @param $userId
+     * @param $email
+     * @param $uuid
+     * @return ChatInterface
+     * @throws \Magento\Framework\Exception\CouldNotSaveException
+     */
+    public function createChat($userId, $email, $uuid)
+    {
+        try {
+            $newChat = $this->chatInterfaceFactory->create();
+            $newChat->setStatusId(
+                $this->chatStatusHelper
+                    ->getChatStatusId(ChatStatusHelper::ACTIVE_CHAT_STATUS)
+            );
+            $newChat->setCustomerId($userId);
+            $newChat->setEmail($email);
+            $newChat->setUuid($uuid);
+            $newChat = $this->chatRepository->save($newChat);
+
+            return $newChat;
+        } catch (\Exception $e) {
+            $this->logger->error('An error has occurred: ' . $e->getMessage());
         }
     }
 }

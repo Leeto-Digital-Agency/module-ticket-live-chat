@@ -1,6 +1,12 @@
 .d-none {
     display: none !important;
 }
+.text-underline {
+    text-decoration: underline;
+}
+.text-center {
+    text-align: center;
+}
 #chat-container {
     position: fixed;
     bottom: 20px;
@@ -272,11 +278,11 @@
 }
 #chat-container .error-message {
     color: red;
-    bottom: 1px;
+    bottom: 8px;
     position: absolute;
     text-align: left;
-    width: 92%;
-    left: 20px;
+    width: 80%;
+    left: 44px;
 }
 #chat-container #email-error-message {
     color: red;

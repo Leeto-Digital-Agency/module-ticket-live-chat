@@ -10,6 +10,7 @@ use Magento\Framework\Controller\Result\JsonFactory;
 use Leeto\TicketLiveChat\Api\AttachmentRepositoryInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Leeto\TicketLiveChat\Helper\Chat\ChatStatusHelper;
+use Leeto\TicketLiveChat\Model\ChatMessageAttachmentFactory;
 
 class GetMessages extends Action
 {
@@ -49,6 +50,11 @@ class GetMessages extends Action
     private $chatStatusHelper;
 
     /**
+     * @var ChatMessageAttachmentFactory
+     */
+    private $chatMessageAttachmentFactory;
+
+    /**
      * @param Context                        $context
      * @param ChatMessageRepositoryInterface $chatMessageRepository
      * @param ChatRepositoryInterface        $chatRepository
@@ -56,6 +62,7 @@ class GetMessages extends Action
      * @param SearchCriteriaBuilder          $searchCriteriaBuilder
      * @param AttachmentRepositoryInterface  $attachmentRepository
      * @param ChatStatusHelper               $chatStatusHelper
+     * @param ChatMessageAttachmentFactory   $chatMessageAttachmentFactory
      */
     public function __construct(
         Context                        $context,
@@ -64,7 +71,8 @@ class GetMessages extends Action
         JsonFactory                    $jsonResultFactory,
         SearchCriteriaBuilder          $searchCriteriaBuilder,
         AttachmentRepositoryInterface  $attachmentRepository,
-        ChatStatusHelper               $chatStatusHelper
+        ChatStatusHelper               $chatStatusHelper,
+        ChatMessageAttachmentFactory   $chatMessageAttachmentFactory
     ) {
         parent::__construct($context);
         $this->chatMessageRepository = $chatMessageRepository;
@@ -73,6 +81,7 @@ class GetMessages extends Action
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
         $this->attachmentRepository = $attachmentRepository;
         $this->chatStatusHelper = $chatStatusHelper;
+        $this->chatMessageAttachmentFactory = $chatMessageAttachmentFactory;
     }
 
     /**
@@ -122,15 +131,21 @@ class GetMessages extends Action
         $chatMessages = $this->chatMessageRepository->getList($searchCriteria)->getItems();
 
         foreach ($chatMessages as $chatMessage) {
-            $messageType = $chatMessage->getAttachmentId() ? 'file' : 'text';
+            $messageType = 'text';
+            $attachment = $this->chatMessageAttachmentFactory->create()
+                ->load($chatMessage->getMessageId(), 'message_id');
 
+            if ($attachment && $attachment->getId()) {
+                $attachmentId = $attachment->getAttachmentId();
+                $messageType = 'file';
+            }
             $message = [
                 'chatId' => $chatMessage->getChatId(),
                 'sender' => $chatMessage->getIsAdmin() ? 'support' : 'user',
                 'type' => $messageType,
             ];
             if ($messageType == 'file') {
-                $attachment = $this->attachmentRepository->get($chatMessage->getAttachmentId());
+                $attachment = $this->attachmentRepository->get($attachmentId);
                 $message['path'] = $attachment->getPath();
                 $message['originalName'] = $attachment->getOriginalName();
             } else {

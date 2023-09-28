@@ -14,7 +14,6 @@ define([
             this.setupWebSocket();
             this.attachEventHandlers();
         },
-
         setupElements: async function (config) {
             this.conn = new WebSocket(`ws://${config.webBaseUrl}:${config.webSocketPort}`);
             this.chatButton = $('#chat-container .chat-button').first();
@@ -32,6 +31,8 @@ define([
             this.newChatSection = this.ticketSection.find('.new-chat');
             this.ongoingChatSection = this.ticketSection.find('.ongoing-chat');
             this.thankYouSection = this.ticketSection.find('.thank-you-wrapper');
+            this.chatClosedSection = $('#chat-container .chat-closed-section');
+            this.startNewChatButton = $('#chat-container #start-new-chat');
             this.ticketSection.hide();
             this.thankYouSection.hide();
             this.isChatConvertedToTicket = false;
@@ -42,10 +43,31 @@ define([
             this.userId = config.loggedInUserId;
             this.supportAvatarImagePath = config.supportAvatarImagePath;
             this.countUnreadMessages = 0;
+            this.newAdminMessage = false; 
+            this.supportDeafultFirstMessageData = {
+                newMessage: true,
+                fromId: null,
+                isAdmin: true,
+                email: null,
+                message: $t('Hi! How can we assist you?'),
+                type: "text",
+            }
+            this.addSupportMessageDOM(this.supportDeafultFirstMessageData);
             
             this.conn.onmessage = async (event) => {
                 let data = JSON.parse(event.data);
-                if (data.adminStatus && !this.isChatConvertedToTicket) {
+
+                if (this.isChatConvertedToTicket) {
+                    if (data.adminStatus) {
+                        this.updateAdminStatus(data.adminStatus);
+                    }
+                    return;
+                }
+                if (data.errorMessages) {
+                    this.handleErrorMessage(data.errorMessages);
+                    return;
+                }
+                if (data.adminStatus) {
                     this.updateAdminStatus(data.adminStatus);
                     if (this.adminStatus === 'offline') {
                         this.ticketSection.show();
@@ -72,7 +94,11 @@ define([
                             this.chatInput.show(); // show chat textarea
                         }
                     }
-                } else {
+                } else if (data.chatClosed && data.byAdmin) {
+                    this.handleClosedChatByAdmin(data);
+                    return;
+                }else {
+                    this.newAdminMessage = true;
                     this.incrementUnreadMessagesCount(true);
                     this.markAsRead();
                     this.addSupportMessageDOM(data);
@@ -118,13 +144,19 @@ define([
                 this.loadChatMessages();
             }
         },
-
         setupWebSocket: function () {
             this.conn.onopen = () => {
                 console.log('WebSocket connection established.');
             };
         
             this.conn.onclose = (event) => {
+                this.updateAdminStatus('offline');
+                this.ticketSection.show();
+                this.newChatSection.show();
+                this.ongoingChatSection.hide();
+                this.emailInputSection.hide();
+                this.chatWrapper.hide();
+                this.chatInput.hide();
                 console.log('WebSocket connection closed:', event.reason);
             };
         
@@ -132,7 +164,6 @@ define([
                 console.error('WebSocket error:', error);
             };
         },
-
         attachEventHandlers: function () {
             var self = this;
 
@@ -202,14 +233,20 @@ define([
                                 ticketErrorMessage.hide();
                                 self.chatWrapper.hide();
                                 self.chatInput.hide();
+                                let ticketLink = self.thankYouSection.find('.ticket-link');
                                 
                                 if (ticketStatus === 1) {
                                     self.thankYouSection.find('.thank-you-message')
                                         .text($t("Thank you for contacting us! You'll be notified via email when we respond to your ticket."));
                                 } else {
                                     self.thankYouSection.find('.thank-you-message')
-                                        .text($t('Thank you for contacting us!'));
+                                        .text($t('Thank you for contacting us! Your ticket is set to closed.'));
                                 }
+                                ticketLink
+                                    .attr('href', response.ticketUrl)  
+                                    .text('Click here to view your ticket.');
+                                
+                                ticketLink.show();
                                 self.thankYouSection.show();
                             } else {
                                 ticketErrorMessage.show();
@@ -221,6 +258,11 @@ define([
                     ticketErrorMessage.show();
                     ticketErrorMessage.text('Please select an option.');
                 }
+            });
+
+            self.startNewChatButton.on('click', function (e) {
+                e.preventDefault();
+                self.handleStartNewChat();
             });
 
             self.chatTextarea.on('keydown', function (event) {
@@ -242,21 +284,18 @@ define([
                 self.scrollToBottom();
             });
         },
-
         toggleChatPopup: function () {
             this.chatPopup.toggleClass('active');
             this.chatButton.toggleClass('active');
             this.markAsRead();
             
         },
-        
         showGuestChatSection: function () {
             this.emailInputSection.hide(); // Hide email input form
             this.chatWrapper.show(); // show chat messages
             this.chatInput.show(); // show chat textarea
             this.adminStatusSection.show(); // show email status
         },
-
         getChatMessages: async function () {
             // Load chat messages from server
             let response;
@@ -280,7 +319,6 @@ define([
             console.log(response);
             return response;
         },
-
         loadChatMessages: function () {
             if (!this.storedChatMessages || this.storedChatMessages.length === 0) {
                 return;
@@ -308,45 +346,35 @@ define([
             });
             this.scrollToBottom();
         },
-
         closeChatPopup: function () {
             this.chatPopup.removeClass('active');
         },
-
         sendMessage: function () {
             this.clearErrorMessage();
-            const MAX_MESSAGE_LENGTH = 2000;
             let messageText = this.chatTextarea.val();
-
-            if (messageText.length > MAX_MESSAGE_LENGTH) {
-                let errorMessage = $('<div class="error-message"><div class="text">Message exceeds the maximum length of ' + MAX_MESSAGE_LENGTH + ' characters.</div></div>');
-                this.chatMessages.append(errorMessage);
-                this.scrollToBottom();
+            if (!this.validateText(messageText)) {
                 return;
             }
-
-            if (messageText.trim() !== '') {
-                let message = $('<div class="message user-message"><div class="text"></div></div>');
-                message.find('.text').html(messageText.replace(/\n/g, '<br>'));
-                
-                // Send message to server
-                let data = {
-                    fromId: this.userId,
-                    isAdmin: false,
-                    email: this.email,
-                    message: messageText,
-                    type: "text",
-                    uuid: this.uuid
-                }
-                this.conn.send(JSON.stringify(data));
-                
-                this.chatMessages.append(message);
-                this.scrollToBottom();
-                this.chatTextarea.val('');
-                this.adjustTextareaHeight();
+            let message = $('<div class="message user-message"><div class="text"></div></div>');
+            message.find('.text').html(messageText.replace(/\n/g, '<br>'));
+            
+            // Send message to server
+            let data = {
+                newMessage: true,
+                fromId: this.userId,
+                isAdmin: false,
+                email: this.email,
+                message: messageText,
+                type: "text",
+                uuid: this.uuid
             }
+            this.conn.send(JSON.stringify(data));
+            
+            this.chatMessages.append(message);
+            this.scrollToBottom();
+            this.chatTextarea.val('');
+            this.adjustTextareaHeight();
         },
-
         handleTextareaShiftEnter: function (event) {
             let startPos = this.chatTextarea[0].selectionStart;
             let endPos = this.chatTextarea[0].selectionEnd;
@@ -358,7 +386,6 @@ define([
             this.chatTextarea[0].selectionStart = this.chatTextarea[0].selectionEnd = startPos + 1;
             this.adjustTextareaHeight();
         },
-
         adjustTextareaHeight: function () {
             let lines = this.chatTextarea.val().split('\n');
             this.chatTextarea[0].style.height = '32px';
@@ -370,7 +397,6 @@ define([
                 this.chatTextarea[0].style.height = requiredHeight + 'px';
             }
         },
-
         handleFileAttachment: function () {
             this.clearErrorMessage();
             let file = this.fileInput[0].files[0];
@@ -390,7 +416,7 @@ define([
             reader.onload = (event) => {
                 let base64FileData = event.target.result.split(',')[1]; // Extract the base64-encoded part
                 let data = {
-
+                    newMessage: true,
                     fromId: this.userId ?? null,
                     isAdmin: false,
                     email: this.email,
@@ -400,6 +426,7 @@ define([
                     attachment: {
                         name: file.name,
                         type: file.type,
+                        size: file.size,
                         data: base64FileData
                     }
                 };
@@ -410,7 +437,6 @@ define([
             this.chatMessages.append(fileMessage);
             this.scrollToBottom();
         },
-
         createFileMessage: function (file) {
             let message = $('<div class="message user-message"><div class="text"></div></div>');
             let fileContent = $('<div class="file-content"></div>');
@@ -437,7 +463,6 @@ define([
             message.find('.text').append(fileContent);
             return message;
         },
-
         renderFile: function (originalName, filePath) {
             let fileType = this.getFileType(originalName);
             let fileContent = $('<div class="file-content"></div>');
@@ -463,7 +488,6 @@ define([
 
             return fileContent;
         },
-
         validateFile: function (file) {
             let allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
             let maxFileSize = 3 * 1024 * 1024; // 3 MB in bytes
@@ -472,7 +496,29 @@ define([
 
             return allowedExtensions.includes(fileExtension) && file.size <= maxFileSize;
         },
+        validateText: function (text) {
+            const MAX_MESSAGE_LENGTH = 2000;
+            let isValid = true;
 
+            let errorMessageSection = $('<div class="error-message"></div>');
+            let textMessage = '';
+            if (text.length > MAX_MESSAGE_LENGTH) {
+                textMessage = $('<div class="text"></div>')
+                    .text($t(`Message length must not exceed ${MAX_MESSAGE_LENGTH} characters.`));
+                isValid = false;
+            }
+            if (text.trim() === '') {
+                textMessage = $('<div class="text"></div>')
+                    .text($t('Message is required.'));
+                isValid = false;
+            }
+            if (!isValid) {
+                errorMessageSection.append(textMessage);
+                this.chatMessages.append(errorMessageSection);
+                this.scrollToBottom();
+            }
+            return isValid;
+        },
         getFileType: function (originalName) {
             const fileExtension = originalName.split('.').pop().toLowerCase();
             const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
@@ -483,7 +529,6 @@ define([
 
             return 'file';
         },
-
         validateEmail: function () {
             let email = $('#email-input').val();
             let validateErrorMessage = '';
@@ -504,7 +549,6 @@ define([
             }
             return isValid;
         },
-
         addSupportMessageDOM: function (data) {
             let messageHeader = $('<div></div>')
                 .addClass('support-message-header')
@@ -530,7 +574,6 @@ define([
 
             this.chatMessages.append(messageDiv);
         },
-
         clearErrorMessage: function () {
             $('.error-message').remove();
         },
@@ -539,20 +582,17 @@ define([
             let emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
             return emailPattern.test(email);
         },
-
         scrollToBottom: function () {
             setTimeout(() => {
                 this.chatWrapper[0].scrollTop = this.chatMessages.prop('scrollHeight');
             }, 30);
         },
-
         getChatId: function () {
             if (this.storedChatMessages && this.storedChatMessages.length > 0) {
                 return this.storedChatMessages[0].chatId;
             }
             return null;
         },
-
         getChatIdFromDb: async function () {
             let response;
 
@@ -574,7 +614,6 @@ define([
             }
             return response.chatId;
         },
-
         updateAdminStatus: function (status) {
             this.adminStatus = status;
             let dot = this.adminStatusSection.find('.dot');
@@ -619,12 +658,18 @@ define([
             }
         },
         markAsRead: async function () {
-            if (this.chatPopup && this.chatPopup.hasClass('active')) {
+            if (!this.chatPopup || this.chatPopup && !this.chatPopup.hasClass('active')) {
+                return;
+            }
+            if (this.newAdminMessage || this.countUnreadMessages > 0) {
                 if (this.countUnreadMessages > 0) {
                     this.countUnreadMessages = 0;
                     this.chatButton.find('.unread-messages-count').hide();
                 }
-                
+                if (this.newAdminMessage) {
+                    this.newAdminMessage = false;
+                }
+
                 let chatId = await this.getChatIdFromDb();
                 $.ajax({
                     url: url.build('support/chat/markasread'),
@@ -642,6 +687,73 @@ define([
         clearGuestInfo: function () {
             $.removeCookie('guest_uuid', { path: '/' });
             $.removeCookie('guest_email', { path: '/' });
+        },
+        refreshGuestInfo: function () {
+            this.clearGuestInfo();
+            this.uuid = this.generateUUID();
+            $.cookie('guest_uuid', this.uuid, { expires: 1 });
+            $.cookie('guest_email', this.email, { expires: 1 });
+        },
+        handleClosedChatByAdmin: function (data) {
+            this.isChatConvertedToTicket = true;
+            this.refreshChatData();
+            this.chatClosedSection.find('.ticket-link')
+                .attr('href', data.ticketUrl)
+                .text($t('Click here to view your ticket.'));
+            this.chatClosedSection.show();
+            this.ticketSection.hide();
+            this.chatWrapper.hide();
+            this.chatInput.hide();
+            this.emailInputSection.hide();
+            if (this.uuid || this.email) {
+                this.refreshGuestInfo();
+            }
+
+        },
+        handleStartNewChat: function () {
+            this.isChatConvertedToTicket = false;
+            this.refreshChatData();
+            this.chatClosedSection.hide();
+            this.emailInputSection.hide();
+            this.addSupportMessageDOM(this.supportDeafultFirstMessageData);
+
+            if (this.uuid || this.email) {
+                this.refreshGuestInfo();
+            }
+            if (this.adminStatus === 'offline') {
+                this.ticketSection.show();
+                this.newChatSection.show();
+                this.ongoingChatSection.hide();
+                this.thankYouSection.hide();
+                this.chatWrapper.hide();
+                this.chatInput.hide();
+            } else if (this.adminStatus === 'online') {
+                this.ticketSection.hide();
+                this.chatWrapper.show();
+                this.chatInput.show();
+            }
+        },
+        refreshChatData: function () {
+            this.storedChatMessages = [];
+            this.countUnreadMessages = 0;
+            this.newAdminMessage = false;
+            this.chatMessages.empty();
+            this.chatTextarea.val('');
+            this.adjustTextareaHeight();
+        },
+        handleErrorMessage: function (errorMessages) {
+            this.chatMessages.find('.message').last().remove();
+            this.scrollToBottom();
+
+            let errorMessagesSection = $('<div></div>')
+                .addClass('error-message');
+            for (let errorMessageText of errorMessages) {
+                let errorMessage = $(`
+                    <div class="text">${errorMessageText}</div>
+                `);
+                errorMessagesSection.append(errorMessage);
+            }
+            this.chatMessages.append(errorMessagesSection);
         }
     });
 });
