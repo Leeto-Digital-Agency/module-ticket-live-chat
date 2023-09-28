@@ -60,9 +60,7 @@ class WebSocketServer extends Command
         InputInterface $input,
         OutputInterface $output,
     ) {
-        $name = $input->getArgument(self::NAME_ARGUMENT);
-        $option = $input->getOption(self::NAME_OPTION);
-        $output->writeln("Hello " . $name);
+        $output->writeln("Websocket server started!");
         $portNumber = $this->helper->getWebsocketPort();
 
         try {

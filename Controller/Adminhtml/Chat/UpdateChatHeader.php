@@ -111,7 +111,8 @@ class UpdateChatHeader extends Action
             $data = [
                 'createdAt' => $formattedDate,
                 'status' => $status,
-                'statusLabel' => $statusLabel
+                'statusLabel' => $statusLabel,
+                'statusId' => $chatStatus->getStatusId()
             ];
             $result = $this->resultJsonFactory->create();
 

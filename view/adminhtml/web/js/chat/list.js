@@ -16,7 +16,6 @@ define([
             this.displayWelcomeMessage();
             this.selectedChatId = null;
         },
-
         setupElements: function (config) {
             this.conn = new WebSocket("ws://" + config.webBaseUrl + ":" + config.webSocketPort);
             this.userList = $('#chat-admin-container .user-list');
@@ -35,18 +34,22 @@ define([
             this.updateUnreadChatMessages = config.updateUnreadChatMessages;
             this.userAvatarImagePath = config.userAvatarImagePath;
         },
-
         setupWebSocket: function () {
-            this.conn.onopen = () => {
-                this.conn.send(JSON.stringify({
+            let self = this;
+
+            self.conn.onopen = () => {
+                self.conn.send(JSON.stringify({
                     newConnection: true,
                     role: "admin"
                 }));
             };
+            self.conn.onmessage = async (event) => {
+                let data = JSON.parse(event.data);
 
-            this.conn.onmessage = async (event) => {
-                let self = this;
-
+                if (data.errorMessages) {
+                    self.handleErrorMessage(data.errorMessages);
+                    return;
+                }
                 self.users = await self.getUsers();
                 self.displayUserList();
                 if (self.selectedChatId) {
@@ -54,9 +57,9 @@ define([
                     userItem.addClass('selected');
                     userItem.find('.unread-messages').remove();
                     self.updateUnreadMessages()
+                    self.displayMessages();
+                    self.scrollToBottom();
                 }
-                self.displayMessages();
-                self.scrollToBottom();
                 console.log('Received message:', event.data);
                  // TODO:
                 // let data = JSON.parse(event.data);
@@ -66,17 +69,13 @@ define([
                 //     user.messages.push(data);
                 // }
             };
-        
-            this.conn.onclose = (event) => {
+            self.conn.onclose = (event) => {
                 console.log('WebSocket connection closed:', event.reason);
             };
-        
-            this.conn.onerror = (error) => {
+            self.conn.onerror = (error) => {
                 console.error('WebSocket error:', error);
             };
-
         },
-
         attachEventHandlers: function () {
             var self = this;
 
@@ -113,7 +112,6 @@ define([
                 self.handleFileAttachment();
             });
         },
-
         getUsers: async function () {
             let response;
 
@@ -131,7 +129,6 @@ define([
             
             return response.users;
         },
-
         handleUserItemClick: async function (event) {
             let userItem = $(event.currentTarget);
             $('.user-item').removeClass('selected');
@@ -145,7 +142,6 @@ define([
             this.fetchChatHeaderData();
             this.scrollToBottom();
         },
-
         handleChatStatusUpdate: function (previousSelectedOption, target) {
             let self = this;
             this.statusModal.show();
@@ -163,6 +159,7 @@ define([
                         statusValue: statusValue
                     },
                     success: function (response) {
+                        self.notifyUserForClosedChat(response.ticketUrl);
                         self.statusModal.hide();
                         self.users = self.users.filter(user => user.id != self.selectedChatId);
                         self.displayUserList();
@@ -179,7 +176,6 @@ define([
                 self.statusModal.hide();
             });
         },
-
         handleSendMessage: function () {
             this.clearErrorMessage();
 
@@ -189,6 +185,7 @@ define([
             }
             // Send message to server
             let data = {
+                newMessage: true,
                 fromId: null,
                 isAdmin: true,
                 email: null,
@@ -208,7 +205,6 @@ define([
             this.adjustLatestMessage();
             this.scrollToBottom();
         },
-
         handleTextareaShiftEnter: function (event) {
             let startPos = this.chatTextarea[0].selectionStart;
             let endPos = this.chatTextarea[0].selectionEnd;
@@ -219,7 +215,6 @@ define([
             this.chatTextarea[0].selectionStart = this.chatTextarea[0].selectionEnd = startPos + 1;
             this.adjustTextareaHeight();
         },
-
         adjustTextareaHeight: function () {
             let lines = this.chatTextarea.val().split('\n');
             this.chatTextarea[0].style.height = '80px';
@@ -230,7 +225,6 @@ define([
                 this.chatTextarea[0].style.height = requiredHeight + 'px';
             }
         },
-
         displayUserList: function () {
             this.userList.empty();
 
@@ -280,7 +274,6 @@ define([
 
             this.totalChats.text(this.users.length);
         },
-
         adjustLatestMessage: function () {
             let latestMessage = this.getLatestMessage();
             let userItem = $(`.user-item[data-chat-id="${this.selectedChatId}"]`);
@@ -298,7 +291,6 @@ define([
             
             return latestMessage;
         },
-
         handleFileAttachment: function () {
             this.clearErrorMessage();
 
@@ -314,6 +306,7 @@ define([
             // Read the file and convert it to base64
             let reader = new FileReader();
             let data = {
+                newMessage: true,
                 fromId: null,
                 isAdmin: true,
                 email: null,
@@ -322,7 +315,8 @@ define([
                 type: "file",
                 attachment: {
                     name: file.name,
-                    type: file.type
+                    type: file.type,
+                    size: file.size
                 }
             };
 
@@ -341,8 +335,8 @@ define([
             let fileMessage = this.createFileMessage(file);
             this.chatMessages.append(fileMessage);
             this.scrollToBottom();
+            this.adjustLatestMessage();
         },
-
         createFileMessage: function (file) {
             let messageDiv = $('<div></div>')
                     .addClass(`message-chat admin`);
@@ -370,7 +364,6 @@ define([
 
             return messageDiv[0];
         },
-
         validateFile: function (file) {
             let allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
             let maxFileSize = 3 * 1024 * 1024; // 3 MB in bytes
@@ -379,7 +372,6 @@ define([
 
             return allowedExtensions.includes(fileExtension) && file.size <= maxFileSize;
         },
-
         renderFile: function (originalName, filePath) {
             let fileType = this.getFileType(originalName);
             let fileContent = $('<div class="file-content"></div>');
@@ -405,7 +397,6 @@ define([
 
             return fileContent;
         },
-
         getFileType: function (originalName) {
             const fileExtension = originalName.split('.').pop().toLowerCase();
             const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
@@ -416,7 +407,6 @@ define([
 
             return 'file';
         },
-
         validateTextarea: function () {
             const MAX_LENGTH = 2000;
             let messageText = this.chatTextarea.val().trim();
@@ -440,7 +430,6 @@ define([
 
             return error;
         },
-
         // Function to fetch data via AJAX and update chat-header
         fetchChatHeaderData: function () {
             var self = this;
@@ -460,7 +449,6 @@ define([
                 }
             });
         },
-
         displayMessages: function () {
             this.chatMessages.empty();
             this.clearErrorMessage();
@@ -481,7 +469,6 @@ define([
             });
             this.scrollToBottom();
         },
-        
         pushMessage: function (data) {
             let selectedUser = this.getSelectedUser();
 
@@ -501,28 +488,23 @@ define([
             }
             selectedUser.messages.push();
         },
-
         displayWelcomeMessage: function () {
             this.chatArea.hide();
             this.welcomeMessage.show();
             this.welcomeMessage.text($t('Select a chat and start messaging now...'));
         },
-
         scrollToBottom: function () {
             setTimeout(() => {
                 this.chatMessages[0].scrollTop = this.chatMessages.prop('scrollHeight');
             }, 30);
 
         },
-
         clearErrorMessage: function () {
             $('.error-message').remove();
         },
-
         getSelectedUser: function () {
             return this.users.find(user => user.id == this.selectedChatId);
         },
-
         updateChatHeader: function (data) {
             let selectedUser = this.getSelectedUser();
             let customerNameElement = $('.chat-customer .customer');
@@ -542,10 +524,11 @@ define([
             
             customerEmailElement.text(selectedUser.email);
             createdAtElement.text(data.createdAt);
+            statusDiv.find("option").prop('selected', false); 
+            statusDiv.find("[value='" + data.statusId + "']").prop('selected', true);
             // statusDiv.text(data.statusLabel);
             statusDiv.removeClass().addClass(data.status)
         },
-
         updateUnreadMessages: function () {
             let self = this;
             
@@ -567,6 +550,28 @@ define([
                     console.log(error);
                 }
             });
+        },
+        notifyUserForClosedChat: function (ticketUrl) {
+            this.conn.send(JSON.stringify({
+                chatClosed: true,
+                byAdmin: true,
+                chatId: this.selectedChatId,
+                ticketUrl: ticketUrl
+            }));
+        },
+        handleErrorMessage: function (errorMessages) {
+            this.chatMessages.find('.message-chat').last().remove();
+            this.scrollToBottom();
+
+            let errorMessagesSection = $('<div></div>')
+                .addClass('error-message');
+            for (let errorMessageText of errorMessages) {
+                let errorMessage = $(`
+                    <div class="text">${errorMessageText}</div>
+                `);
+                errorMessagesSection.append(errorMessage);
+            }
+            this.chatArea.append(errorMessagesSection);
         }
     });
 });
