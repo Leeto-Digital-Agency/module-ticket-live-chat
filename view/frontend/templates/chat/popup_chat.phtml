@@ -8,6 +8,18 @@
     $allowedExtensions = $this->helper('Leeto\TicketLiveChat\Helper\Chat\ChatHelper')->getAllowedFileExtensions();
     $maxFilesSize = $this->helper('Leeto\TicketLiveChat\Helper\Chat\ChatHelper')->getMaximumFilesSize();
 ?>
+<style>
+    #chat-container .chat-closed-section {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #chat-container .chat-closed-section .chat-closed-message {
+        color: red;
+    }
+</style>
 <div id="chat-container" class="<?= $escaper->escapeHtml($chatPosition) ?>">
     <button class="chat-button">
         <div class="unread-messages-count" style="display: none"></div>
@@ -88,32 +100,34 @@
                             $createTicketUrl = $this->getUrl('support/ticket/index');
                         ?>
                         <?= __('The administrator is currently unavailable; please create a support ticket
-                            %1here%2 to fix your issue.', '<a href="'. $createTicketUrl . '">', '</a>') 
+                            %1here%2 to fix your issue.', '<a class="text-underline" href="'. $createTicketUrl . '">', '</a>') 
                         ?>
                     </p>
-                    
                 </div>
                 <div class="thank-you-wrapper">
                     <p class="thank-you-message"></p>
-                    <!-- <p class="ticket-id-message">
-                        <?php //echo $escaper->escapeHtml(__('Your ticket ID is:')) ?>
-                        <span class="ticket-id"></span>
-                    </p> -->
+                    <a href="#" class="ticket-link text-underline"></a>
+                    <p>
+                        <?= __('Start a new chat %1here%2', '<a id="start-new-chat" class="text-underline" href="#">', '</a>') ?>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="chat-closed-section" style="display:none;">
+            <div class="chat-closed-wrapper text-center">
+                <div class="chat-closed-message">
+                    <?= $escaper->escapeHtml(__('The chat is closed by Administrator.')) ?>
+                </div>
+                <a href="#" class="ticket-link text-underline"></a>
+                <div class="chat-closed-buttons">
+                    <p>
+                        <?= __('Start a new chat %1here%2', '<a id="start-new-chat" class="text-underline" href="#">', '</a>') ?>
+                    </p>
                 </div>
             </div>
         </div>
         <div class="chat-wrapper">
-            <div class="chat-messages">
-                <div class="message support-message">
-                    <div class="support-message-header">
-                        <img class="support-message-avatar" src="<?= $supportAvatarImagePath ?>">
-                        <span class="support-message-name"><?= $escaper->escapeHtml(__('Support')) ?></span>
-                    </div>
-                    <div class="support-message-content">
-                        <div class="text"><?= $escaper->escapeHtml(__('Hi! How can we assist you?')) ?></div>
-                    </div>
-                </div>
-            </div>
+            <div class="chat-messages"></div>
         </div>
         <div class="chat-input">
             <div class="input-wrapper">

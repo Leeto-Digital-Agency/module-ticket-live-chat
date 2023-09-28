@@ -16,6 +16,8 @@ use Magento\Framework\Filesystem;
 use Magento\Framework\UrlInterface;
 use Leeto\TicketLiveChat\Helper\Data;
 use Leeto\TicketLiveChat\Helper\Chat\ChatStatusHelper;
+use Leeto\TicketLiveChat\Helper\Chat\ChatHelper;
+use Leeto\TicketLiveChat\Model\ChatMessageAttachmentFactory;
 
 class ChatServer implements MessageComponentInterface
 {
@@ -93,34 +95,48 @@ class ChatServer implements MessageComponentInterface
      * @var ChatStatusHelper
      */
     protected $chatStatusHelper;
+
+    /**
+     * @var ChatHelper
+     */
+    protected $chatHelper;
+
+    /**
+     * @var ChatMessageAttachmentFactory
+     */
+    protected $chatMessageAttachmentFactory;
     
     /**
-     * @param ChatRepositoryInterface        $chatRepository
-     * @param ChatInterfaceFactory           $chatInterfaceFactory
-     * @param ChatMessageRepositoryInterface $chatMessageRepository
-     * @param ChatMessageInterfaceFactory    $chatMessageInterfaceFactory
-     * @param SearchCriteriaBuilder          $searchCriteriaBuilder
-     * @param AttachmentInterfaceFactory     $attachmentInterfaceFactory
-     * @param AttachmentRepositoryInterface  $attachmentRepository
-     * @param Filesystem                     $filesystem
-     * @param UrlInterface                   $_url
-     * @param LoggerInterface                $logger
-     * @param Data                           $helper
-     * @param ChatStatusHelper               $chatStatusHelper
+     * @param ChatRepositoryInterface                  $chatRepository
+     * @param ChatInterfaceFactory                     $chatInterfaceFactory
+     * @param ChatMessageRepositoryInterface           $chatMessageRepository
+     * @param ChatMessageInterfaceFactory              $chatMessageInterfaceFactory
+     * @param SearchCriteriaBuilder                    $searchCriteriaBuilder
+     * @param AttachmentInterfaceFactory               $attachmentInterfaceFactory
+     * @param AttachmentRepositoryInterface            $attachmentRepository
+     * @param Filesystem                               $filesystem
+     * @param UrlInterface                             $_url
+     * @param LoggerInterface                          $logger
+     * @param Data                                     $helper
+     * @param ChatStatusHelper                         $chatStatusHelper
+     * @param ChatHelper                               $chatHelper
+     * @param ChatMessageAttachmentFactory             $chatMessageAttachmentFactory
      */
     public function __construct(
-        ChatRepositoryInterface        $chatRepository,
-        ChatInterfaceFactory           $chatInterfaceFactory,
-        ChatMessageRepositoryInterface $chatMessageRepository,
-        ChatMessageInterfaceFactory    $chatMessageInterfaceFactory,
-        SearchCriteriaBuilder          $searchCriteriaBuilder,
-        AttachmentInterfaceFactory     $attachmentInterfaceFactory,
-        AttachmentRepositoryInterface  $attachmentRepository,
-        Filesystem                     $filesystem,
-        UrlInterface                   $_url,
-        LoggerInterface                $logger,
-        Data                           $helper,
-        ChatStatusHelper               $chatStatusHelper
+        ChatRepositoryInterface                  $chatRepository,
+        ChatInterfaceFactory                     $chatInterfaceFactory,
+        ChatMessageRepositoryInterface           $chatMessageRepository,
+        ChatMessageInterfaceFactory              $chatMessageInterfaceFactory,
+        SearchCriteriaBuilder                    $searchCriteriaBuilder,
+        AttachmentInterfaceFactory               $attachmentInterfaceFactory,
+        AttachmentRepositoryInterface            $attachmentRepository,
+        Filesystem                               $filesystem,
+        UrlInterface                             $_url,
+        LoggerInterface                          $logger,
+        Data                                     $helper,
+        ChatStatusHelper                         $chatStatusHelper,
+        ChatHelper                               $chatHelper,
+        ChatMessageAttachmentFactory             $chatMessageAttachmentFactory
     ) {
         $this->clients = new \SplObjectStorage();
         $this->chatRepository = $chatRepository;
@@ -135,6 +151,8 @@ class ChatServer implements MessageComponentInterface
         $this->logger = $logger;
         $this->helper = $helper;
         $this->chatStatusHelper = $chatStatusHelper;
+        $this->chatHelper = $chatHelper;
+        $this->chatMessageAttachmentFactory = $chatMessageAttachmentFactory;
     }
 
     /**
@@ -154,119 +172,16 @@ class ChatServer implements MessageComponentInterface
     {
         try {
             $data = json_decode($data, true);
+            
             // Add the connection to the chat if it's a new connection
             if (isset($data['newConnection'])) {
-                if (isset($data['role']) && $data['role'] === 'admin') {
-                    $this->adminChatConnection = $from;
-                    $this->notifyUsersAdminStatus();
-                } else {
-                    if (isset($data['chatId']) && $data['chatId']) {
-                        $this->addConnectionToChat($from, $data['chatId']);
-                    } else {
-                        // It will be a temporary chat Id until the user sends a message
-                        // It serves to send notifications about the admin status to the user
-                        $this->addConnectionToChat($from, $from->resourceId);
-                    }
-                    $this->notifyUserAdminStatus($from);
-                }
-                return;
+                $this->handleNewConnection($from, $data);
             }
-            
-            $chat = $this->chatInterfaceFactory->create();
-            $chatId = null;
-            // Load chat message by fromId, chatId or email (logged in user, admin or guest)
-            if (isset($data['fromId']) && $data['fromId']) {
-                $chat->load($data['fromId'], 'customer_id');
-            } elseif (isset($data['chatId']) && $data['chatId']) {
-                $chat->load($data['chatId'], 'chat_id');
-            } elseif (isset($data['uuid']) && $data['uuid']) {
-                $chat->load($data['uuid'], 'uuid');
+            if (isset($data['chatClosed'])) {
+                $this->handleChatClosed($data);
             }
-            if ($chat && 
-                $chat->getChatId() &&
-                $chat->getStatusId() === $this->chatStatusHelper
-                    ->getChatStatusId(ChatStatusHelper::ACTIVE_CHAT_STATUS)
-            ) {
-                $chatId = $chat->getChatId();
-            } else {
-                try {
-                    // Create a new chat and add the connection to it
-                    $newChat = $this->chatInterfaceFactory->create();
-                    $newChat->setStatusId(
-                        $this->chatStatusHelper
-                            ->getChatStatusId(ChatStatusHelper::ACTIVE_CHAT_STATUS)
-                    );
-                    $newChat->setCustomerId(empty($data['fromId']) ? null : $data['fromId']);
-                    $newChat->setEmail($data['email'] ?? null);
-                    $newChat->setUuid($data['uuid'] ?? null);
-                    $this->chatRepository->save($newChat);
-
-                    // we are removing the temporary chatId (resourceId) and adding the real one
-                    $chatId = $newChat->getChatId();
-                    $this->updateConnectionChatId($from, $chatId);
-                } catch (\Exception $e) {
-                    $this->logger->error('An error has occurred: ' . $e->getMessage());
-                }
-            }
-
-            if ($chatId) {
-                $newChatMessage = $this->chatMessageInterfaceFactory->create();
-                $newChatMessage->setChatId($chatId);
-                $newChatMessage->setIsAdmin($data['isAdmin'] ? 1 : null);
-        
-                if ($data['type'] === 'text') {
-                    $newChatMessage->setMessage($data['message']);
-                } elseif ($data['type'] === 'file') {
-                    // Decode the base64-encoded file data
-                    $base64FileData = $data['attachment']['data'];
-                    $decodedFileData = base64_decode($base64FileData);
-    
-                    // Save the decoded file data to a file
-                    $uniqueFileName = uniqid() . '_' . $data['attachment']['name'];
-                    $mediaDirectory = $this->filesystem
-                        ->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
-                    $customAttachmentsPath = 'custom_attachments/' . $uniqueFileName;
-                    $mediaDirectory->writeFile($customAttachmentsPath, $decodedFileData);
-                    $mediaUrl = $this->_url
-                    ->getBaseUrl(['_type' => \Magento\Framework\UrlInterface::URL_TYPE_MEDIA]);
-                    $filePath = $mediaUrl . $customAttachmentsPath;
-    
-                    // Create a new attachment record in the database
-                    $attachment = $this->attachmentInterfaceFactory->create();
-                    $attachment->setChatId($chatId);
-                    $attachment->setOriginalName($data['attachment']['name']);
-                    $attachment->setUniqueName($uniqueFileName);
-                    $attachment->setPath($filePath);
-                    $this->attachmentRepository->save($attachment);
-    
-                    $newChatMessage->setAttachmentId($attachment->getAttachmentId());
-                }
-                $result = $this->chatMessageRepository->save($newChatMessage);
-    
-                if ($result) {
-                    $this->updateChat($chatId);
-                    $dataToSend = json_encode([
-                        'chatId' => $chatId,
-                        'message' => $data['message'],
-                        'type' => $data['type'],
-                        'path' => $filePath ?? null,
-                        'originalName' => $data['attachment']['name'] ?? null,
-                        'status' => 'success',
-                    ]);
-    
-                    if (!$data['isAdmin']) {
-                        if ($this->adminChatConnection) {
-                            $this->adminChatConnection->send($dataToSend);
-                        } else {
-                            // TO DO
-                        }
-                    } else {
-                        if (isset($this->clientsChatConnectionMapping[$chatId])) {
-                            $client = $this->clientsChatConnectionMapping[$chatId];
-                            $client->send($dataToSend);
-                        }
-                    }
-                }
+            if (isset($data['newMessage'])) {
+                $this->handleNewMessage($from, $data);
             }
         } catch (\Exception $e) {
             $this->logger->error('An error has occurred: ' . $e->getMessage());
@@ -278,7 +193,6 @@ class ChatServer implements MessageComponentInterface
      */
     public function onClose(ConnectionInterface $conn)
     {
-        $this->clients->detach($conn);
         $this->removeConnectionFromChat($conn);
         echo "Connection {$conn->resourceId} has disconnected\n";
     }
@@ -291,6 +205,156 @@ class ChatServer implements MessageComponentInterface
     {
         $this->logger->error('An error has occurred: ' . $e->getMessage());
         $conn->close();
+    }
+
+    /**
+     * @param ConnectionInterface $from
+     * @param $data
+     * @return void
+     */
+    public function handleNewMessage($from, $data)
+    {
+        try {
+            $result = $this->validateData($data);
+            if (!empty($result)) {
+                $from->send(json_encode($result));
+                return;
+            }
+
+            $userId = isset($data['fromId']) && !empty($data['fromId']) ? $data['fromId'] : null;
+            $email = isset($data['email']) && !empty($data['email']) ? $data['email'] : null;
+            $uuid = isset($data['uuid']) && !empty($data['uuid']) ? $data['uuid'] : null;
+            $chatId = isset($data['chatId']) && !empty($data['chatId']) ? $data['chatId'] : null;
+
+            $chat = $this->chatHelper->getChat($userId, $email, $uuid, $chatId);
+            $chatId = $chat && $chat->getChatId() ? $chat->getChatId() : null;
+        } catch (\Exception $e) {
+            dd($e->getMessage());
+        }
+        if (!$chatId) {
+            // Create a new chat and add the connection to it
+            $newChat = $this->chatHelper->createChat($userId, $email, $uuid);
+            $chatId = $newChat->getChatId();
+            // we are removing the temporary chatId (resourceId) and adding the real one
+            $this->updateConnectionChatId($from, $chatId);
+        }
+        if ($chatId) {
+            $newChatMessage = $this->chatMessageInterfaceFactory->create();
+            $newChatMessage->setChatId($chatId);
+            $newChatMessage->setIsAdmin($data['isAdmin'] ? 1 : null);
+            $newChatMessage->setMessage($data['message']);
+            $newChatMessage = $this->chatMessageRepository->save($newChatMessage);
+
+            if ($data['type'] === 'file') {
+                // Decode the base64-encoded file data
+                $base64FileData = $data['attachment']['data'];
+                $decodedFileData = base64_decode($base64FileData);
+
+                // Save the decoded file data to a file
+                $uniqueFileName = uniqid() . '_' . $data['attachment']['name'];
+                $mediaDirectory = $this->filesystem
+                    ->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
+                $customAttachmentsPath = 'custom_attachments/' . $uniqueFileName;
+                $mediaDirectory->writeFile($customAttachmentsPath, $decodedFileData);
+                $mediaUrl = $this->_url
+                ->getBaseUrl(['_type' => \Magento\Framework\UrlInterface::URL_TYPE_MEDIA]);
+                $filePath = $mediaUrl . $customAttachmentsPath;
+
+                // Create a new attachment record in the database
+                $attachment = $this->attachmentInterfaceFactory->create();
+                $attachment->setChatId($chatId);
+                $attachment->setOriginalName($data['attachment']['name']);
+                $attachment->setUniqueName($uniqueFileName);
+                $attachment->setPath($filePath);
+                $this->attachmentRepository->save($attachment);
+
+                // create a new chat message attachment record in the database
+                // to link the chat message with the attachment
+                $chatMessageAttachmentModel = $this->chatMessageAttachmentFactory->create();
+                $chatMessageAttachmentData = [
+                    'message_id' => $newChatMessage->getMessageId(),
+                    'attachment_id' => $attachment->getAttachmentId()
+                ];
+                $chatMessageAttachmentModel->setData($chatMessageAttachmentData)->save();
+            }
+            if ($newChatMessage) {
+                $this->updateChat($chatId);
+                $dataToSend = json_encode([
+                    'chatId' => $chatId,
+                    'message' => $data['message'],
+                    'type' => $data['type'],
+                    'path' => $filePath ?? null,
+                    'originalName' => $data['attachment']['name'] ?? null,
+                    'status' => 'success',
+                ]);
+
+                if (!$data['isAdmin']) {
+                    if ($this->adminChatConnection) {
+                        $this->adminChatConnection->send($dataToSend);
+                    } else {
+                        // TO DO
+                    }
+                } else {
+                    if (isset($this->clientsChatConnectionMapping[$chatId])) {
+                        $client = $this->clientsChatConnectionMapping[$chatId];
+                        $client->send($dataToSend);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * @param $data
+     * @return array
+     */
+    public function validateData($data)
+    {
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
+        $allowedMessageTypes = ['text', 'file'];
+        $maxFileSize = 3 * 1024 * 1024; // 3 MB in bytes
+        $maxLength = 2000;
+        $errors = [];
+
+        if (!isset($data['type']) ||
+            empty($data['type'] || 
+            !in_array($data['type'], $allowedMessageTypes))
+        ) {
+            $errors['errorMessages'][] = __('Something went wrong, your message could not be sent.');
+            $this->logger->error(__('Message type is missing.'));
+            return $errors;
+        }
+        
+        if ($data['type'] === 'text') {
+            if (!isset($data['message']) || empty($data['message'])) {
+                $errors['errorMessages'][] = __('Please enter a message.');
+
+            } elseif (strlen($data['message']) >= $maxLength) {
+                $errors['errorMessages'][] = __('The message must be less than %1 characters.', $maxLength);
+            }
+        } elseif ($data['type'] === 'file') {
+            if (!isset($data['attachment']) || empty($data['attachment'])) {
+                $errors['errorMessages'][] = __('Please select a file.');
+            } else {
+                if (isset($data['attachment']['name'])) {
+                    $fileName = $data['attachment']['name'];
+                    $fileNameParts = explode('.', $fileName);
+                    $fileType = end($fileNameParts);
+                }
+                if (isset($data['attachment']['size'])){
+                    $fileSize = $data['attachment']['size'];
+                }
+
+                if (!$fileType || !in_array($fileType, $allowedExtensions)) {
+                    $errors['errorMessages'][] = __('Invalid file type.');
+                }
+                if (!$fileSize || $fileSize > $maxFileSize) {
+                    $errors['errorMessages'][] = __('Maximum file size exceeded.');
+                }
+            }
+        }
+
+        return $errors;
     }
 
     /**
@@ -314,13 +378,17 @@ class ChatServer implements MessageComponentInterface
 
         if ($chatId) {
             unset($this->clientsChatConnectionMapping[$chatId]);
+            $this->clients->detach($conn);
         } else {
-            sleep(5);
-            $this->adminChatConnection = null;
-            $this->notifyUsersAdminStatus();
+            sleep(3);
+            if (!$this->helper->isBackendAdminLoggedIn()) {
+                $this->clients->detach($conn);
+                $this->adminChatConnection = null;
+                $this->notifyUsersAdminStatus();
+            }
         }
     }
-
+    
     /**
      * Notify the user about the admin status
      * @param ConnectionInterface $conn
@@ -386,5 +454,64 @@ class ChatServer implements MessageComponentInterface
         } catch (\Exception $e) {
             $this->logger->error('An error has occurred: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * @param $chatId
+     */
+    public function updateConnectionToTemporaryId($chatId)
+    {
+        if (isset($this->clientsChatConnectionMapping[$chatId])) {
+            $client = $this->clientsChatConnectionMapping[$chatId];
+            unset($this->clientsChatConnectionMapping[$chatId]);
+            $this->addConnectionToChat($client, $client->resourceId);
+        }
+    }
+
+    /**
+     * @param $data
+     */
+    public function notifyUserClosedChat($data)
+    {
+        $chatId = $data['chatId'];
+
+        if (isset($this->clientsChatConnectionMapping[$chatId])) {
+            $client = $this->clientsChatConnectionMapping[$chatId];
+            $client->send(json_encode($data));
+        }
+    }
+
+    /**
+     * @param ConnectionInterface $from
+     * @param $data
+     * @return void
+     */
+    public function handleNewConnection($from, $data)
+    {
+        if (isset($data['role']) && $data['role'] === 'admin') {
+            $this->adminChatConnection = $from;
+            $this->notifyUsersAdminStatus();
+        } else {
+            if (isset($data['chatId']) && $data['chatId']) {
+                $this->addConnectionToChat($from, $data['chatId']);
+            } else {
+                // It will be a temporary chat Id until the user sends a message
+                // It serves to send notifications about the admin status to the user
+                $this->addConnectionToChat($from, $from->resourceId);
+            }
+            $this->notifyUserAdminStatus($from);
+        }
+    }
+
+    /**
+     * @param $data
+     * @return void
+     */
+    public function handleChatClosed($data)
+    {
+        if ($data['byAdmin']) {
+            $this->notifyUserClosedChat($data);
+        }
+        $this->updateConnectionToTemporaryId($data['chatId']);
     }
 }

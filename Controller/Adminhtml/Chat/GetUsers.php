@@ -16,6 +16,7 @@ use Magento\Customer\Api\CustomerRepositoryInterface;
 use Leeto\TicketLiveChat\Helper\Data;
 use Leeto\TicketLiveChat\Helper\Chat\ChatStatusHelper;
 use Magento\Framework\Api\SortOrderBuilder;
+use Leeto\TicketLiveChat\Model\ChatMessageAttachmentFactory;
 
 class GetUsers extends Action
 {
@@ -77,6 +78,11 @@ class GetUsers extends Action
     protected $chatStatusHelper;
 
     /**
+     * @var ChatMessageAttachmentFactory
+     */
+    protected $chatMessageAttachmentFactory;
+
+    /**
      * @param Context                        $context
      * @param ResultFactory                  $resultFactory
      * @param ChatRepositoryInterface        $chatRepository
@@ -90,6 +96,7 @@ class GetUsers extends Action
      * @param Data                           $helper
      * @param SortOrderBuilder               $sortOrderBuilder
      * @param ChatStatusHelper               $chatStatusHelper
+     * @param ChatMessageAttachmentFactory   $chatMessageAttachmentFactory
      */
     public function __construct(
         Context                        $context,
@@ -104,7 +111,8 @@ class GetUsers extends Action
         CustomerRepositoryInterface    $customerRepositoryInterface,
         Data                           $helper,
         SortOrderBuilder               $sortOrderBuilder,
-        ChatStatusHelper               $chatStatusHelper
+        ChatStatusHelper               $chatStatusHelper,
+        ChatMessageAttachmentFactory   $chatMessageAttachmentFactory
     ) {
         $this->resultFactory = $resultFactory;
         $this->chatRepository = $chatRepository;
@@ -118,6 +126,7 @@ class GetUsers extends Action
         $this->helper = $helper;
         $this->sortOrderBuilder = $sortOrderBuilder;
         $this->chatStatusHelper = $chatStatusHelper;
+        $this->chatMessageAttachmentFactory = $chatMessageAttachmentFactory;
         parent::__construct($context);
     }
 
@@ -162,15 +171,21 @@ class GetUsers extends Action
             $messages = [];
             $unreadMessages = 0;
             foreach ($chatMessages as $chatMessage) {
-                $messageType = $chatMessage->getAttachmentId() ? 'file' : 'text';
-                
+                $messageType = 'text';
+                $attachment = $this->chatMessageAttachmentFactory->create()
+                    ->load($chatMessage->getMessageId(), 'message_id');
+
+                if ($attachment && $attachment->getId()) {
+                    $attachmentId = $attachment->getAttachmentId();
+                    $messageType = 'file';
+                }
                 $message = [
                     'sender' => $chatMessage->getIsAdmin() ? 'admin' : 'user',
                     'type' => $messageType,
                     'isRead' => $chatMessage->getIsRead() ? true : false
                 ];
                 if ($messageType == 'file') {
-                    $attachment = $this->attachmentRepository->get($chatMessage->getAttachmentId());
+                    $attachment = $this->attachmentRepository->get($attachmentId);
                     $message['path'] = $attachment->getPath();
                     $message['originalName'] = $attachment->getOriginalName();
                 } else {
