@@ -54,6 +54,10 @@ define([
             self.conn.onmessage = async (event) => {
                 let data = JSON.parse(event.data);
 
+                if (data.typeEvent) {
+                    self.handleTyping(data);
+                    return;
+                }
                 if (data.errorMessages) {
                     self.handleErrorMessage(data.errorMessages);
                     return;
@@ -114,6 +118,33 @@ define([
 
             this.chatTextarea.on('input', function () {
                 self.adjustTextareaHeight();
+            });
+
+            this.chatTextarea.on('keyup', function () {
+                if (!self.chatTextarea.val().length) {
+                    self.conn.send(JSON.stringify({
+                        typing: false,
+                        chatId: self.selectedChatId,
+                        isAdmin: true,
+                        typingEvent: true
+                    }));
+                } else {
+                    self.conn.send(JSON.stringify({
+                        typing: true,
+                        chatId: self.selectedChatId,
+                        isAdmin: true,
+                        typingEvent: true
+                    }));
+                }
+            });
+
+            this.chatTextarea.on('blur', function () {
+                self.conn.send(JSON.stringify({
+                    typing: false,
+                    chatId: self.selectedChatId,
+                    isAdmin: true,
+                    typingEvent: true
+                }));
             });
 
             this.fileInput.on('change', function () {
@@ -598,6 +629,26 @@ define([
             selectedUser.messages.pop();
             this.adjustLatestMessage();
             this.scrollToBottom();
-        }
+        },
+        handleTyping: function (data) {
+            let self = this;
+            let isShown = $("#chat-admin-container .typing-event").length;
+            if (!isShown && data.typing) {
+               self.showTypingMessage();
+               self.scrollToBottom();
+            } else if (isShown && !data.typing) {
+                self.hideTypingMessage();
+            }
+        },
+        showTypingMessage: function () {
+            let typingMessage = $('<div></div>')
+                .addClass('typing-event')
+                .text('User is typing...');
+
+            this.chatMessages.append(typingMessage);
+        },
+        hideTypingMessage: function () {
+            $("#chat-admin-container .typing-event").remove();
+        },
     });
 });

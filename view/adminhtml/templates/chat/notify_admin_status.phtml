@@ -1,7 +1,7 @@
 <div id="chat-notify-admin-status" style="display: none;"></div>
 
 <?php
-    $helper = $this->helper('Leeto\TicketLiveChat\Helper\Data');
+    $helper = $this->helper(Leeto\TicketLiveChat\Helper\Data::class);
     $webBaseUrl = substr($helper->getWebBaseUrl(), strpos($helper->getWebBaseUrl(), "//") + 2, -1);
     $webSocketPort = $helper->getWebsocketPort();
     $isAdminLoggedIn = $helper->isBackendAdminLoggedIn();
@@ -11,10 +11,10 @@
 {
     "#chat-notify-admin-status": { 
         "Leeto_TicketLiveChat/js/chat/notify-admin-status": {
-            "webBaseUrl": "<?= $webBaseUrl ?>",
-            "webSocketPort": "<?= $webSocketPort ?>",
-            "isAdminLoggedIn": "<?= $isAdminLoggedIn ?>",
-            "chatUnreadMessagesUrl": "<?= $chatUnreadMessagesUrl ?>"
+            "webBaseUrl": "<?= $escaper->escapeHtml($webBaseUrl) ?>",
+            "webSocketPort": "<?= $escaper->escapeHtml($webSocketPort) ?>",
+            "isAdminLoggedIn": "<?= $escaper->escapeHtml($isAdminLoggedIn) ?>",
+            "chatUnreadMessagesUrl": "<?= $escaper->escapeHtml($chatUnreadMessagesUrl) ?>"
         } 
     }
 } 

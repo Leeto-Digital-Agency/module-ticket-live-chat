@@ -182,7 +182,7 @@ class TicketMessageHelper extends AbstractHelper
                 $data[] = $messageData;
                 continue;
             }
-            $imageSrc = $message->getIsAdmin() ? 
+            $imageSrc = $message->getIsAdmin() ?
                 $this->ticketDataHelper->getAdminAvatarImagePath() :
                 $this->ticketDataHelper->getUserAvatarImagePath();
             $messageData['sender'] = $message->getIsAdmin() ? 'admin' : 'user';

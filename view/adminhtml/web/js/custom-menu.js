@@ -11,7 +11,9 @@ define([
             this.ticketUnreadMessagesUrl = config.ticketUnreadMessagesUrl;
             this.leetoMenu = $('.item-leeto-menu');
             this.ticketMenuItem = $('.item-leeto-menu .item-leeto-tickets.level-1');
-            this.checkTicketUnreadMessages();
+            if (config.isAdminLoggedIn) {
+                this.checkTicketUnreadMessages();
+            }
         },
 
         checkTicketUnreadMessages: function() {

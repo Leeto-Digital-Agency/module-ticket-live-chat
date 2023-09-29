@@ -155,7 +155,8 @@ class Create extends Action
                 if (empty($data['ticket_type'])) {
                     $errors['ticket_type'] = __('Ticket Type is required.');
                 }
-                if (isset($data['increment_id'])
+                if (
+                    isset($data['increment_id'])
                     && ($data['ticket_type'] == $orderTypeId)
                     && empty($data['increment_id'])
                 ) {
@@ -197,9 +198,10 @@ class Create extends Action
                 if ($data['ticket_type'] == $orderTypeId) {
                     $orderIncrementId = $data['increment_id'];
                     $order = $this->orderModel->loadByIncrementId($orderIncrementId);
-                    if (!$order->getId() ||
-                        ($order->getCustomerId() && !$customerId) ||
-                        ($order->getCustomerId() != $customerId)
+                    if (
+                        !$order->getId()
+                        || ($order->getCustomerId() && !$customerId)
+                        || ($order->getCustomerId() != $customerId)
                     ) {
                         $this->messageManager->addErrorMessage(__("Please provide a valid order."));
                         $this->sessionManager->setFormData($data);

@@ -135,7 +135,7 @@ class GetMessages extends Action
             $attachment = $this->chatMessageAttachmentFactory->create()
                 ->load($chatMessage->getMessageId(), 'message_id');
 
-            if ($attachment && $attachment->getId()) {
+            if ($attachment && $attachment->getEntityId()) {
                 $attachmentId = $attachment->getAttachmentId();
                 $messageType = 'file';
             }
