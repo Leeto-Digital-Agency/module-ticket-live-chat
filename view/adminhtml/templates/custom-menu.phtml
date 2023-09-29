@@ -1,10 +1,14 @@
 <div id="custom-menu" style="display: none;"></div>
-
+<?php
+    $helper = $this->helper(Leeto\TicketLiveChat\Helper\Data::class);
+    $isAdminLoggedIn = $helper->isBackendAdminLoggedIn();
+?>
 <script type="text/x-magento-init">
 {
     "#custom-menu": { 
         "Leeto_TicketLiveChat/js/custom-menu": {
-            "ticketUnreadMessagesUrl": "<?= $escaper->escapeHtml($this->getTicketUnreadMessagesUrl()) ?>"
+            "ticketUnreadMessagesUrl": "<?= $escaper->escapeHtml($this->getTicketUnreadMessagesUrl()) ?>",
+            "isAdminLoggedIn": "<?= $escaper->escapeHtml($isAdminLoggedIn) ?>"
         } 
     }
 } 

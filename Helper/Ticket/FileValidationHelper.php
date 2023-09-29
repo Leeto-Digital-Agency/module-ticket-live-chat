@@ -8,9 +8,9 @@ use Magento\Framework\App\Helper\Context;
 class FileValidationHelper extends AbstractHelper
 {
     /**
-    * @param Context $context
-    */
-    public function __construct(
+     * @param Context $context
+     */
+    public function _construct(
         Context $context,
     ) {
         parent::__construct($context);
@@ -67,7 +67,11 @@ class FileValidationHelper extends AbstractHelper
      */
     public function getAllowedFileExtensions()
     {
-        return $this->scopeConfig->getValue('support/ticket_files_upload/allowed_extensions', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+        return $this->scopeConfig
+            ->getValue(
+                'support/ticket_files_upload/allowed_extensions',
+                \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            );
     }
 
     /**
@@ -75,7 +79,11 @@ class FileValidationHelper extends AbstractHelper
      */
     public function getMaximumFilesSize()
     {
-        return $this->scopeConfig->getValue('support/ticket_files_upload/maximum_files_size', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+        return $this->scopeConfig
+            ->getValue(
+                'support/ticket_files_upload/maximum_files_size',
+                \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            );
     }
 
     /**
@@ -83,6 +91,10 @@ class FileValidationHelper extends AbstractHelper
      */
     public function getMaximumFilesToUpload()
     {
-        return $this->scopeConfig->getValue('support/ticket_files_upload/maximum_files', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+        return $this->scopeConfig
+            ->getValue(
+                'support/ticket_files_upload/maximum_files',
+                \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            );
     }
 }

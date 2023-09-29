@@ -59,6 +59,10 @@ define([
             this.conn.onmessage = async (event) => {
                 let data = JSON.parse(event.data);
 
+                if (data.typeEvent) {
+                    this.handleTyping(data);
+                    return;
+                }
                 if (this.isChatConvertedToTicket) {
                     if (data.adminStatus) {
                         this.updateAdminStatus(data.adminStatus);
@@ -277,6 +281,39 @@ define([
                 }
             });
 
+            self.chatTextarea.on('keyup', async function () {
+                let chatId = await self.getChatIdFromDb();
+                if (chatId) {
+                    if (!self.chatTextarea.val().length) {
+                        self.conn.send(JSON.stringify({
+                            typing: false,
+                            chatId: chatId,
+                            isAdmin: false,
+                            typingEvent: true
+                        }));
+                    } else {
+                        self.conn.send(JSON.stringify({
+                            typing: true,
+                            chatId: chatId,
+                            isAdmin: false,
+                            typingEvent: true
+                        }));
+                    }
+                }
+            });
+
+            self.chatTextarea.on('blur', async function () {
+                let chatId = await self.getChatIdFromDb();
+                if (chatId) {
+                    self.conn.send(JSON.stringify({
+                        typing: false,
+                        chatId: chatId,
+                        isAdmin: false,
+                        typingEvent: true
+                    }));
+                }
+            });
+
             self.chatTextarea.on('input', function () {
                 self.adjustTextareaHeight();
             });
@@ -339,7 +376,9 @@ define([
                         messageDiv.append(this.renderFile(message.originalName, message.path));
     
                     } else {
-                        messageDiv.find('.text').text(message.text.replace(/\n/g, '<br>'));
+                        if (message.text) {
+                            messageDiv.find('.text').text(message.text.replace(/\n/g, '<br>'));
+                        }
                     }
     
                     this.chatMessages.append(messageDiv);
@@ -755,6 +794,26 @@ define([
                 errorMessagesSection.append(errorMessage);
             }
             this.chatMessages.append(errorMessagesSection);
-        }
+        },
+        handleTyping: function (data) {
+            let self = this;
+            let isShown = $("#chat-container .typing-event").length;
+            if (!isShown && data.typing) {
+               self.showTypingMessage();
+               self.scrollToBottom();
+            } else if (isShown && !data.typing) {
+                self.hideTypingMessage();
+            }
+        },
+        showTypingMessage: function () {
+            let typingMessage = $('<div></div>')
+                .addClass('typing-event')
+                .text('Admin is typing...');
+
+            this.chatMessages.append(typingMessage);
+        },
+        hideTypingMessage: function () {
+            $("#chat-container .typing-event").remove();
+        },
     });
 });

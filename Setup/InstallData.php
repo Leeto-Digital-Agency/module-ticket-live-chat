@@ -11,92 +11,92 @@ use Leeto\TicketLiveChat\Model\ChatStatusFactory;
 
 class InstallData implements InstallDataInterface
 {
-	/**
-	 * @var \Leeto\TicketLiveChat\Model\TicketStatusFactory
-	 */
-	protected $ticketStatusFactory;
+    /**
+     * @var \Leeto\TicketLiveChat\Model\TicketStatusFactory
+     */
+    protected $ticketStatusFactory;
 
-	/**
-	 * @var \Leeto\TicketLiveChat\Model\TicketTypeFactory
-	 */
-	protected $ticketTypeFactory;
-	
-	/**
-	 * @var \Leeto\TicketLiveChat\Model\ChatStatusFactory
-	 */
-	protected $chatStatusFactory;
+    /**
+     * @var \Leeto\TicketLiveChat\Model\TicketTypeFactory
+     */
+    protected $ticketTypeFactory;
 
-	/**
-	 * @var string
-	 */
-	protected $ticketStatusTable = 'leeto_ticket_status';
+    /**
+     * @var \Leeto\TicketLiveChat\Model\ChatStatusFactory
+     */
+    protected $chatStatusFactory;
 
-	/**
-	 * @var string
-	 */
-	protected $ticketTypeTable = 'leeto_ticket_type';
+    /**
+     * @var string
+     */
+    protected $ticketStatusTable = 'leeto_ticket_status';
 
-	/**
-	 * @var string
-	 */
-	protected $chatStatusTable = 'leeto_chat_status';
+    /**
+     * @var string
+     */
+    protected $ticketTypeTable = 'leeto_ticket_type';
 
-	public function __construct(
-		TicketStatusFactory $ticketStatusFactory,
-		TicketTypeFactory $ticketTypeFactory,
-		ChatStatusFactory $chatStatusFactory
-	) {
-		$this->ticketStatusFactory = $ticketStatusFactory;
-		$this->ticketTypeFactory = $ticketTypeFactory;
-		$this->chatStatusFactory = $chatStatusFactory;
-	}
+    /**
+     * @var string
+     */
+    protected $chatStatusTable = 'leeto_chat_status';
 
-	public function install(ModuleDataSetupInterface $setup, ModuleContextInterface $context)
-	{
-		$setup->startSetup();
+    public function __construct(
+        TicketStatusFactory $ticketStatusFactory,
+        TicketTypeFactory $ticketTypeFactory,
+        ChatStatusFactory $chatStatusFactory
+    ) {
+        $this->ticketStatusFactory = $ticketStatusFactory;
+        $this->ticketTypeFactory = $ticketTypeFactory;
+        $this->chatStatusFactory = $chatStatusFactory;
+    }
 
-		$ticketStatus = $this->ticketStatusFactory->create();
-		$ticketType = $this->ticketTypeFactory->create();
-		$chatStatus = $this->chatStatusFactory->create();
+    public function install(ModuleDataSetupInterface $setup, ModuleContextInterface $context)
+    {
+        $setup->startSetup();
 
-		$ticketStatusData = [
-			[
-				'label' => "Opened",
-			],
-			[
-				'label' => "Closed",
-			],
-			[
-				'label' => "Pending",
-			]
-		];
-		$ticketTypeData = [
-			[
-				'label' => "General",
-			],
-			[
-				'label' => "Order",
-			]
-		];
-		$chatStatusData = [
-			[
-				'label' => "Ongoing",
-			],
-			[
-				'label' => "Closed",
-			]
-		];
+        $ticketStatus = $this->ticketStatusFactory->create();
+        $ticketType = $this->ticketTypeFactory->create();
+        $chatStatus = $this->chatStatusFactory->create();
 
-		foreach ($ticketStatusData as $data) {
+        $ticketStatusData = [
+            [
+                'label' => "Opened",
+            ],
+            [
+                'label' => "Closed",
+            ],
+            [
+                'label' => "Pending",
+            ]
+        ];
+        $ticketTypeData = [
+            [
+                'label' => "General",
+            ],
+            [
+                'label' => "Order",
+            ]
+        ];
+        $chatStatusData = [
+            [
+                'label' => "Ongoing",
+            ],
+            [
+                'label' => "Closed",
+            ]
+        ];
+
+        foreach ($ticketStatusData as $data) {
             $setup->getConnection()->insert($setup->getTable($this->ticketStatusTable), $data);
         }
-		foreach ($ticketTypeData as $data) {
-			$setup->getConnection()->insert($setup->getTable($this->ticketTypeTable), $data);
-		}
-		foreach ($chatStatusData as $data) {
-			$setup->getConnection()->insert($setup->getTable($this->chatStatusTable), $data);
-		}
+        foreach ($ticketTypeData as $data) {
+            $setup->getConnection()->insert($setup->getTable($this->ticketTypeTable), $data);
+        }
+        foreach ($chatStatusData as $data) {
+            $setup->getConnection()->insert($setup->getTable($this->chatStatusTable), $data);
+        }
 
         $setup->endSetup();
-	}
+    }
 }

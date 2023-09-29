@@ -100,7 +100,7 @@
 </div>
 
 <?php
-    $helper = $this->helper('Leeto\TicketLiveChat\Helper\Data');
+    $helper = $this->helper(Leeto\TicketLiveChat\Helper\Data::class);
     $getUsersUrl =  $block->getFullUrl('leeto_support/chat/getusers');
     $updateChatHeaderUrl =  $block->getFullUrl('leeto_support/chat/updatechatheader');
     $updateUnreadChatMessages = $block->getFullUrl('leeto_support/chat/updateunreadmessages');
@@ -116,13 +116,13 @@
 {
     "#chat-admin-container": { 
         "Leeto_TicketLiveChat/js/chat/list": {
-            "getUsersUrl": "<?= $getUsersUrl ?>",
-            "updateChatHeaderUrl": "<?= $updateChatHeaderUrl ?>",
-            "changeChatStatusControllerUrl": "<?= $changeChatStatusControllerUrl ?>",
-            "updateUnreadChatMessages": "<?= $updateUnreadChatMessages ?>",
-            "userAvatarImagePath": "<?= $userAvatarImagePath ?>",
-            "webBaseUrl": "<?= $webBaseUrl ?>",
-            "webSocketPort": "<?= $webSocketPort ?>",
+            "getUsersUrl": "<?= $escaper->escapeHtml($getUsersUrl) ?>",
+            "updateChatHeaderUrl": "<?= $escaper->escapeHtml($updateChatHeaderUrl) ?>",
+            "changeChatStatusControllerUrl": "<?= $escaper->escapeHtml($changeChatStatusControllerUrl) ?>",
+            "updateUnreadChatMessages": "<?= $escaper->escapeHtml($updateUnreadChatMessages) ?>",
+            "userAvatarImagePath": "<?= $escaper->escapeHtml($userAvatarImagePath) ?>",
+            "webBaseUrl": "<?= $escaper->escapeHtml($webBaseUrl) ?>",
+            "webSocketPort": "<?= $escaper->escapeHtml($webSocketPort) ?>",
             "allowedExtensions": "<?= $this->escapeHtml($allowedExtensions) ?>",
             "maxFilesSize": "<?= $this->escapeHtml($maxFilesSize) ?>"
         } 

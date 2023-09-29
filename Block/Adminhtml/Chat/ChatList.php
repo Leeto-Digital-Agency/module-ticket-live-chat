@@ -40,7 +40,7 @@ class ChatList extends Template
      */
     public function getChatStatuses()
     {
-      return $this->chatStatusHelper->getChatStatuses();
+        return $this->chatStatusHelper->getChatStatuses();
     }
 
     /**

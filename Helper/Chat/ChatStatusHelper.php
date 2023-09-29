@@ -168,7 +168,5 @@ class ChatStatusHelper extends AbstractHelper
                 'message' => $e->getMessage()
             ];
         }
-
-
     }
 }

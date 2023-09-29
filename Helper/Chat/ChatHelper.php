@@ -144,7 +144,7 @@ class ChatHelper extends AbstractHelper
         parent::__construct($context);
     }
 
-    public function createTicket($chatId, $subject, $statusId = false,  $chatStatusLabel = false)
+    public function createTicket($chatId, $subject, $statusId = false, $chatStatusLabel = false)
     {
         try {
             if (!$chatId) {
@@ -164,7 +164,7 @@ class ChatHelper extends AbstractHelper
             // find status id
             if (!$statusId && !$chatStatusLabel) {
                 $ticketStatusId = $this->ticketStatusHelper->getStatusIdByLabel('closed');
-            } else if (!$statusId && $chatStatusLabel) {
+            } elseif (!$statusId && $chatStatusLabel) {
                 $ticketStatusId = $this->ticketStatusHelper->getStatusIdByLabel($chatStatusLabel);
             } else {
                 $ticketStatusId = $statusId;
@@ -197,7 +197,6 @@ class ChatHelper extends AbstractHelper
                 'success' => false,
                 'message' => __('Ticket was not created, something went wrong')
             ];
-            
         } catch (NoSuchEntityException $e) {
             return [
                 'success' => false,

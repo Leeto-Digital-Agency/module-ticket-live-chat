@@ -1,25 +1,14 @@
 <?php
-    $helper = $this->helper('Leeto\TicketLiveChat\Helper\Data');
+    $helper = $this->helper(Leeto\TicketLiveChat\Helper\Data::class);
+    $chatHelper = $this->helper(Leeto\TicketLiveChat\Helper\Chat\ChatHelper::class);
     $loggedInUserId = $helper->getLoggedInUser() ? $helper->getLoggedInUser()->getId() : null;
     $supportAvatarImagePath = $helper->getSupportAvatarImagePath();
     $webBaseUrl = substr($helper->getWebBaseUrl(), strpos($helper->getWebBaseUrl(), "//") + 2, -1);
     $webSocketPort = $helper->getWebsocketPort();
     $chatPosition = $helper->getChatPosition();
-    $allowedExtensions = $this->helper('Leeto\TicketLiveChat\Helper\Chat\ChatHelper')->getAllowedFileExtensions();
-    $maxFilesSize = $this->helper('Leeto\TicketLiveChat\Helper\Chat\ChatHelper')->getMaximumFilesSize();
+    $allowedExtensions = $chatHelper->getAllowedFileExtensions();
+    $maxFilesSize = $chatHelper->getMaximumFilesSize();
 ?>
-<style>
-    #chat-container .chat-closed-section {
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    #chat-container .chat-closed-section .chat-closed-message {
-        color: red;
-    }
-</style>
 <div id="chat-container" class="<?= $escaper->escapeHtml($chatPosition) ?>">
     <button class="chat-button">
         <div class="unread-messages-count" style="display: none"></div>
@@ -82,10 +71,16 @@
                 <div class="ongoing-chat">
                     <div class="ticket-input-wrapper">
                         <p class="ticket-input-label">
-                            <?= $escaper->escapeHtml(__('The administrator is currently unavailable; please create a support ticket to continue your issue:')) ?>
+                            <?= $escaper
+                                ->escapeHtml(
+                                    __('The administrator is currently unavailable; 
+                                    please create a support ticket to continue your issue:')
+                                )
+                            ?>
                         </p>
                         <div class="options">
-                            <input type="radio" name="ticket-status-choice" id="ticket-status-choice-1" value="1" checked>
+                            <input type="radio" name="ticket-status-choice" 
+                                id="ticket-status-choice-1" value="1" checked>
                             <label for="ticket-status-choice-1"><?= $escaper->escapeHtml(__('Yes')) ?></label>
                             <input type="radio" name="ticket-status-choice" id="ticket-status-choice-2" value="2">
                             <label for="ticket-status-choice-2"><?= $escaper->escapeHtml(__('No')) ?></label>
@@ -96,19 +91,30 @@
                 </div>
                 <div class="new-chat">
                     <p class="ticket-input-label">
-                        <?php 
+                        <?php
                             $createTicketUrl = $this->getUrl('support/ticket/index');
                         ?>
-                        <?= __('The administrator is currently unavailable; please create a support ticket
-                            %1here%2 to fix your issue.', '<a class="text-underline" href="'. $createTicketUrl . '">', '</a>') 
-                        ?>
+                        <?= $escaper->escapeHtml(
+                            __(
+                                'The administrator is currently unavailable; please create a support ticket
+                                %1here%2 to fix your issue.',
+                                '<a class="text-underline" href="' . $escaper->escapeHtml($createTicketUrl) . '">',
+                                '</a>'
+                            )
+                        ) ?>
                     </p>
                 </div>
                 <div class="thank-you-wrapper">
                     <p class="thank-you-message"></p>
                     <a href="#" class="ticket-link text-underline"></a>
                     <p>
-                        <?= __('Start a new chat %1here%2', '<a id="start-new-chat" class="text-underline" href="#">', '</a>') ?>
+                        <?= $escaper->escapeHtml(
+                            __(
+                                'Start a new chat %1here%2',
+                                '<a id="start-new-chat" class="text-underline" href="#">',
+                                '</a>'
+                            )
+                        ) ?>
                     </p>
                 </div>
             </div>
@@ -121,7 +127,13 @@
                 <a href="#" class="ticket-link text-underline"></a>
                 <div class="chat-closed-buttons">
                     <p>
-                        <?= __('Start a new chat %1here%2', '<a id="start-new-chat" class="text-underline" href="#">', '</a>') ?>
+                        <?= $escaper->escapeHtml(
+                            __(
+                                'Start a new chat %1here%2',
+                                '<a id="start-new-chat" class="text-underline" href="#">',
+                                '</a>'
+                            )
+                        ) ?>
                     </p>
                 </div>
             </div>
@@ -210,12 +222,12 @@
 {
     "#chat-container": { 
         "Leeto_TicketLiveChat/js/chat/popup-chat": {
-            "loggedInUserId": "<?= $loggedInUserId ?>",
-            "supportAvatarImagePath": "<?= $supportAvatarImagePath ?>",
-            "webBaseUrl": "<?= $webBaseUrl ?>",
-            "webSocketPort": "<?= $webSocketPort ?>",
-            "allowedExtensions": "<?= $this->escapeHtml($allowedExtensions) ?>",
-            "maxFilesSize": "<?= $this->escapeHtml($maxFilesSize) ?>"
+            "loggedInUserId": "<?= $escaper->escapeHtml($loggedInUserId) ?>",
+            "supportAvatarImagePath": "<?= $escaper->escapeHtml($supportAvatarImagePath) ?>",
+            "webBaseUrl": "<?= $escaper->escapeHtml($webBaseUrl) ?>",
+            "webSocketPort": "<?= $escaper->escapeHtml($webSocketPort) ?>",
+            "allowedExtensions": "<?= $escaper->escapeHtml($allowedExtensions) ?>",
+            "maxFilesSize": "<?= $escaper->escapeHtml($maxFilesSize) ?>"
         }
     }
 } 

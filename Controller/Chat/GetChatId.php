@@ -11,7 +11,6 @@ use Leeto\TicketLiveChat\Api\ChatRepositoryInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Leeto\TicketLiveChat\Helper\Chat\ChatStatusHelper;
 
-
 class GetChatId extends Action
 {
     /**
@@ -79,7 +78,7 @@ class GetChatId extends Action
                 throw new NoSuchEntityException(
                     __('No user id or email provided')
                 );
-            }   
+            }
             $chatId = $this->getChatId($customerId, $email, $uuid);
 
             return $result->setData([

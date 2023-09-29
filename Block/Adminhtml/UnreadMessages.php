@@ -22,7 +22,7 @@ class UnreadMessages extends Template
     }
 
     /**
-     * @return string 
+     * @return string
      */
     public function getTicketUnreadMessagesUrl()
     {

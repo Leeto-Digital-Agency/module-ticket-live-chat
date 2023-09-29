@@ -8,7 +8,6 @@ use Magento\Framework\Api\FilterBuilder;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Leeto\TicketLiveChat\Api\TicketTypeRepositoryInterface;
 
-
 class TicketTypeHelper extends AbstractHelper
 {
     /**
@@ -74,5 +73,4 @@ class TicketTypeHelper extends AbstractHelper
 
         return $this->ticketTypeRepositoryInterface->getList($searchCriteria)->getItems()[0]->getTypeId();
     }
-
 }

@@ -275,7 +275,7 @@ class TicketDataHelper extends AbstractHelper
         return $latestMessageData;
     }
 
-     /**
+    /**
      * @return string
      */
     public function getUserAvatarImagePath()

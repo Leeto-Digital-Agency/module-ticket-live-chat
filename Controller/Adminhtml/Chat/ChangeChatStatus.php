@@ -66,7 +66,10 @@ class ChangeChatStatus extends Action
             }
             // Create ticket from this chat with status pending by default
             $data = $this->chatHelper->createTicket(
-                $chatId, self::TICKET_SUBJECT_FROM_ADMIN_CHAT, false, self::TICKET_STATUS_CREATED_FROM_ADMIN_CHAT
+                $chatId,
+                self::TICKET_SUBJECT_FROM_ADMIN_CHAT,
+                false,
+                self::TICKET_STATUS_CREATED_FROM_ADMIN_CHAT
             );
             return $result->setData($data);
         } catch (\Exception $e) {

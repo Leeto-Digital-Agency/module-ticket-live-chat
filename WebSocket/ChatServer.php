@@ -181,7 +181,7 @@ class ChatServer implements MessageComponentInterface
     {
         try {
             $data = json_decode($data, true);
-            
+
             // Add the connection to the chat if it's a new connection
             if (isset($data['newConnection'])) {
                 $this->handleNewConnection($from, $data);
@@ -191,6 +191,9 @@ class ChatServer implements MessageComponentInterface
             }
             if (isset($data['newMessage'])) {
                 $this->handleNewMessage($from, $data);
+            }
+            if (isset($data['typingEvent'])) {
+                $this->handleTyping($data);
             }
         } catch (\Exception $e) {
             $this->logger->error('An error has occurred: ' . $e->getMessage());
@@ -266,7 +269,7 @@ class ChatServer implements MessageComponentInterface
                 $customAttachmentsPath = 'custom_attachments/' . $uniqueFileName;
                 $mediaDirectory->writeFile($customAttachmentsPath, $decodedFileData);
                 $mediaUrl = $this->_url
-                ->getBaseUrl(['_type' => \Magento\Framework\UrlInterface::URL_TYPE_MEDIA]);
+                    ->getBaseUrl(['_type' => \Magento\Framework\UrlInterface::URL_TYPE_MEDIA]);
                 $filePath = $mediaUrl . $customAttachmentsPath;
 
                 // Create a new attachment record in the database
@@ -301,8 +304,6 @@ class ChatServer implements MessageComponentInterface
                 if (!$data['isAdmin']) {
                     if ($this->adminChatConnection) {
                         $this->adminChatConnection->send($dataToSend);
-                    } else {
-                        // TO DO
                     }
                 } else {
                     if (isset($this->clientsChatConnectionMapping[$chatId])) {
@@ -320,25 +321,26 @@ class ChatServer implements MessageComponentInterface
      */
     public function validateData($data)
     {
-        $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
+        $allowedExtensions = explode(',', $this->chatHelper->getAllowedFileExtensions());
         $allowedMessageTypes = ['text', 'file'];
-        $maxFileSize = 3 * 1024 * 1024; // 3 MB in bytes
+        $maxFilesSize = $this->chatHelper->getMaximumFilesSize();
+        $convertedMaxFilesSize = $maxFilesSize * 1024 * 1024;
         $maxLength = 2000;
         $errors = [];
 
-        if (!isset($data['type']) ||
-            empty($data['type'] || 
-            !in_array($data['type'], $allowedMessageTypes))
+        if (
+            !isset($data['type'])
+            || empty($data['type']
+                || !in_array($data['type'], $allowedMessageTypes))
         ) {
             $errors['errorMessages'][] = __('Something went wrong, your message could not be sent.');
             $this->logger->error(__('Message type is missing.'));
             return $errors;
         }
-        
+
         if ($data['type'] === 'text') {
             if (!isset($data['message']) || empty($data['message'])) {
                 $errors['errorMessages'][] = __('Please enter a message.');
-
             } elseif (strlen($data['message']) >= $maxLength) {
                 $errors['errorMessages'][] = __('The message must be less than %1 characters.', $maxLength);
             }
@@ -351,14 +353,14 @@ class ChatServer implements MessageComponentInterface
                     $fileNameParts = explode('.', $fileName);
                     $fileType = end($fileNameParts);
                 }
-                if (isset($data['attachment']['size'])){
+                if (isset($data['attachment']['size'])) {
                     $fileSize = $data['attachment']['size'];
                 }
 
                 if (!$fileType || !in_array($fileType, $allowedExtensions)) {
                     $errors['errorMessages'][] = __('Invalid file type.');
                 }
-                if (!$fileSize || $fileSize > $maxFileSize) {
+                if (!$fileSize || $fileSize > $convertedMaxFilesSize) {
                     $errors['errorMessages'][] = __('Maximum file size exceeded.');
                 }
             }
@@ -398,7 +400,7 @@ class ChatServer implements MessageComponentInterface
             }
         }
     }
-    
+
     /**
      * Notify the user about the admin status
      * @param ConnectionInterface $conn
@@ -458,7 +460,7 @@ class ChatServer implements MessageComponentInterface
         try {
             $chat = $this->chatInterfaceFactory->create()
                 ->load($chatId);
-    
+
             $chat->setUpdatedAt(date('Y-m-d H:i:s'));
             $this->chatRepository->save($chat);
         } catch (\Exception $e) {
@@ -523,5 +525,29 @@ class ChatServer implements MessageComponentInterface
             $this->notifyUserClosedChat($data);
         }
         $this->updateConnectionToTemporaryId($data['chatId']);
+    }
+
+    public function handleTyping($data)
+    {
+        $chatId = $data['chatId'];
+        $dataToSend = [
+            'typeEvent' => true,
+            'typing' => $data['typing']
+        ];
+
+        if (!$data['isAdmin']) {
+            if ($this->adminChatConnection) {
+                $this->adminChatConnection->send(
+                    $this->jsonSerializer->serialize($dataToSend)
+                );
+            }
+        } else {
+            if (isset($this->clientsChatConnectionMapping[$chatId])) {
+                $client = $this->clientsChatConnectionMapping[$chatId];
+                $client->send(
+                    $this->jsonSerializer->serialize($dataToSend)
+                );
+            }
+        }
     }
 }

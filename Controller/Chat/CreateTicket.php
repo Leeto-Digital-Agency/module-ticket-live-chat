@@ -7,8 +7,8 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Leeto\TicketLiveChat\Helper\Chat\ChatHelper;
 
-class CreateTicket extends Action {
-
+class CreateTicket extends Action
+{
     /**
      * @var string
      */
@@ -45,10 +45,12 @@ class CreateTicket extends Action {
         $chatStatusButtonId = $this->getRequest()->getParam('ticketStatus');
         $chatStatusLabel = $chatStatusButtonId && intval($chatStatusButtonId) === 1 ? 'opened' : 'closed';
         $data = $this->chatHelper->createTicket(
-            $chatId, self::TICKET_SUBJECT_FROM_CUSTOMER_CHAT, false, $chatStatusLabel
+            $chatId,
+            self::TICKET_SUBJECT_FROM_CUSTOMER_CHAT,
+            false,
+            $chatStatusLabel
         );
         
         return $result->setData($data);
     }
-
 }

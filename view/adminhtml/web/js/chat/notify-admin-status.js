@@ -8,10 +8,6 @@ define([
     return Component.extend({
         initialize: async function (config) {
             this._super();
-            this.chatUnreadMessagesUrl = config.chatUnreadMessagesUrl;
-            this.leetoMenu = $('.item-leeto-menu');
-            this.chatMenuItem = $('.item-leeto-menu .item-leeto-chat.level-1');
-            this.checkChatUnreadMessages();
             if (config.isAdminLoggedIn) {
                 this.setupElements(config);
                 this.setupWebSocket();
@@ -20,6 +16,9 @@ define([
 
         setupElements: function (config) {
             this.conn = new WebSocket(`ws://${config.webBaseUrl}:${config.webSocketPort}`);
+            this.chatUnreadMessagesUrl = config.chatUnreadMessagesUrl;
+            this.leetoMenu = $('.item-leeto-menu');
+            this.chatMenuItem = $('.item-leeto-menu .item-leeto-chat.level-1');
         },
 
         setupWebSocket: function () {

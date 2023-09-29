@@ -118,6 +118,7 @@
     flex-direction: column;
     align-items: center;
     border-top: 1px solid #e1e1e1;
+    position: relative;
 }
 #chat-admin-container .chat-area .chat-input .textarea-wrapper {
     width: 100%;
@@ -291,6 +292,9 @@
     right: 10px;
     cursor: pointer;
     font-size: 24px;
+}
+#chat-admin-container .typing-event {
+    color: gray;
 }
 #chat-admin-container .chat-area .loading-container {
     display: flex;
