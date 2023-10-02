@@ -17,14 +17,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Ratchet\Http\HttpServer;
 use Ratchet\Server\IoServer;
 use Ratchet\WebSocket\WsServer;
-use Leeto\TicketLiveChat\WebSocket\ChatServer;
+use Leeto\TicketLiveChat\WebSocket\ChatServerFactory;
 use Psr\Log\LoggerInterface;
 use Leeto\TicketLiveChat\Helper\Data;
 
 class WebSocketServer extends Command
 {
     /**
-     * @var \Leeto\TicketLiveChat\WebSocket\ChatServer
+     * @var ChatServerFactory
      */
     protected $chatServer;
 
@@ -42,7 +42,7 @@ class WebSocketServer extends Command
     public const NAME_OPTION = "option";
 
     public function __construct(
-        ChatServer $chatServer,
+        ChatServerFactory $chatServer,
         LoggerInterface $logger,
         Data $helper
     ) {
@@ -64,7 +64,7 @@ class WebSocketServer extends Command
         $portNumber = $this->helper->getWebsocketPort();
 
         try {
-            $wsServer = new WsServer($this->chatServer);
+            $wsServer = new WsServer($this->chatServer->create());
             $httpServer = new HttpServer($wsServer);
             $server = IoServer::factory($httpServer, $portNumber);
             $server->run();
