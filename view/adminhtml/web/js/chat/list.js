@@ -37,10 +37,12 @@ define([
             this.allowedExtensions = config.allowedExtensions.split(',');
             this.maxFilesSize = parseInt(config.maxFilesSize);
             this.getUsersUrl = config.getUsersUrl;
+            this.getUserUrl = config.getUserUrl;
             this.updateChatHeaderUrl = config.updateChatHeaderUrl;
             this.changeChatStatusControllerUrl = config.changeChatStatusControllerUrl;
             this.updateUnreadChatMessages = config.updateUnreadChatMessages;
             this.userAvatarImagePath = config.userAvatarImagePath;
+            this.resourceId = null;
         },
         setupWebSocket: function () {
             let self = this;
@@ -54,6 +56,15 @@ define([
             self.conn.onmessage = async (event) => {
                 let data = JSON.parse(event.data);
 
+                if (data.resourceId) {
+                    self.resourceId = data.resourceId;
+                    return;
+                }
+                if (data.notifyAdminsUserClick){
+                    let userItem = $(`.user-item[data-chat-id="${data.chatId}"]`);
+                    userItem.trigger('click');
+                    return;
+                }
                 if (data.typeEvent) {
                     self.handleTyping(data);
                     return;
@@ -62,24 +73,17 @@ define([
                     self.handleErrorMessage(data.errorMessages);
                     return;
                 }
-                self.users = await self.getUsers();
-                self.displayUserList();
-                if (self.selectedChatId) {
-                    let userItem = $(`.user-item[data-chat-id="${self.selectedChatId}"]`);
-                    userItem.addClass('selected');
-                    userItem.find('.unread-messages').remove();
-                    self.updateUnreadMessages()
-                    self.displayMessages();
-                    self.scrollToBottom();
+                if(data.lostMessages) {
+                    self.handleLostMessages(data.messages);
+                    return;
                 }
-                console.log('Received message:', event.data);
-                 // TODO:
-                // let data = JSON.parse(event.data);
-                // let chatId = data.chatId;
-                // let user = this.users.find(user => user.id == chatId);
-                // if (user) {
-                //     user.messages.push(data);
-                // }
+
+                let chatId = data.chatId;
+                if (!chatId) {
+                    return;
+                }
+                self.createOrUpdateUser(chatId, data);
+
             };
             self.conn.onclose = (event) => {
                 console.log('WebSocket connection closed:', event.reason);
@@ -168,33 +172,52 @@ define([
             
             return response.users;
         },
-        handleUserItemClick: async function (event) {
-            let userItem = $(event.currentTarget);
+        createOrUpdateUser: function (chatId, data) {
             let self = this;
-            this.chatLoadingDiv.css('display', 'flex');
-            $('.user-item').removeClass('selected');
-            this.welcomeMessage.hide();
-            this.chatArea.show();
-            userItem.addClass('selected');
-            this.selectedChatId = parseInt(userItem.attr('data-chat-id'));
-            this.displayMessages();
 
-            await this.updateUnreadMessages();
-            this.fetchChatHeaderData();
-            this.fetchChatHeaderData(function () {
+            let user = self.users.find(user => user.id == chatId);
+            if (user) {
+                self.updateUser(user, data);
+                if (chatId == self.selectedChatId) {
+                    self.notifyAdminsUserClick();
+                    let message = self.getLatestMessage(); 
+                    self.appendMessage(message)
+                    self.updateUnreadMessages();
+                } else {
+                    self.displayUnreadMessages(user);
+                }
+            } else {
+                self.createUser(data);
+            }
+        },
+        handleUserItemClick: async function (event) {
+            let self = this;
+            let userItem = $(event.currentTarget);
+            if (userItem.attr('data-chat-id') == self.selectedChatId) {
+                return;
+            }
+            self.chatLoadingDiv.css('display', 'flex');
+            $('.user-item').removeClass('selected');
+            self.welcomeMessage.hide();
+            self.chatArea.show();
+            userItem.addClass('selected');
+            self.selectedChatId = parseInt(userItem.attr('data-chat-id'));
+            self.notifyAdminsUserClick();
+            self.displayMessages();
+            self.updateUnreadMessages();
+            self.updateChatHeader(function() {
                 self.chatLoadingDiv.hide();
             });
-            this.scrollToBottom();
+            self.scrollToBottom();
         },
         handleChatStatusUpdate: function (previousSelectedOption, target) {
             let self = this;
-            this.statusModal.show();
+            self.statusModal.show();
 
-            this.statusModal.find('#modalYesBtn').off('click');
-            this.statusModal.find('#modalNoBtn').off('click');
-            this.statusModal.find('#modalYesBtn').on('click', function () {
+            self.statusModal.find('#modalYesBtn').off('click');
+            self.statusModal.find('#modalNoBtn').off('click');
+            self.statusModal.find('#modalYesBtn').on('click', function () {
                 let statusValue = target.val();
-                self.usersLoadingDiv.css('display', 'flex');
                 $.ajax({
                     url: self.changeChatStatusControllerUrl,
                     type: 'POST',
@@ -207,9 +230,8 @@ define([
                         self.notifyUserForClosedChat(response.ticketUrl);
                         self.statusModal.hide();
                         self.users = self.users.filter(user => user.id != self.selectedChatId);
-                        self.displayUserList(function () {
-                            self.usersLoadingDiv.hide();
-                        });
+                        self.removeUser();
+                        self.totalChats.text(self.users.length);
                         self.selectedChatId = null;
                         self.displayWelcomeMessage();
                     },
@@ -218,16 +240,17 @@ define([
                     }
                 });
             });
-            this.statusModal.find('#modalNoBtn').on('click', function () {
+            self.statusModal.find('#modalNoBtn').on('click', function () {
                 target.val(previousSelectedOption);
                 self.statusModal.hide();
             });
         },
         handleSendMessage: function () {
-            this.clearErrorMessage();
+            let self = this;
 
-            let messageText = this.chatTextarea.val().trim();
-            if (this.validateTextarea()) {
+            self.clearErrorMessage();
+            let messageText = self.chatTextarea.val().trim();
+            if (self.validateTextarea()) {
                 return;
             }
             // Send message to server
@@ -236,31 +259,35 @@ define([
                 fromId: null,
                 isAdmin: true,
                 email: null,
+                resourceId: self.resourceId,
                 message: messageText,
-                chatId: this.selectedChatId,
+                chatId: self.selectedChatId,
                 type: "text",
             }
-            this.conn.send(JSON.stringify(data));
+            self.conn.send(JSON.stringify(data));
 
             // store the message in the array
-            this.pushMessage(data)
+            self.pushMessage(data)
 
             // Display the message in the chat
-            this.chatMessages.append($('<div></div>').addClass('message-chat admin').text(messageText));
-            this.chatTextarea.val('');
-            this.adjustTextareaHeight();
-            this.adjustLatestMessage();
-            this.scrollToBottom();
+            self.chatMessages.append($('<div></div>').addClass('message-chat admin')
+                .html(messageText.replace(/\n/g, '<br>')));
+            self.chatTextarea.val('');
+            self.adjustTextareaHeight();
+            self.adjustLatestMessage();
+            self.scrollToBottom();
         },
         handleTextareaShiftEnter: function (event) {
-            let startPos = this.chatTextarea[0].selectionStart;
-            let endPos = this.chatTextarea[0].selectionEnd;
-            let text = this.chatTextarea.val();
+            let self = this;
+
+            let startPos = self.chatTextarea[0].selectionStart;
+            let endPos = self.chatTextarea[0].selectionEnd;
+            let text = self.chatTextarea.val();
             let newText = text.substring(0, startPos) + '\n' + text.substring(endPos);
 
-            this.chatTextarea.val(newText);
-            this.chatTextarea[0].selectionStart = this.chatTextarea[0].selectionEnd = startPos + 1;
-            this.adjustTextareaHeight();
+            self.chatTextarea.val(newText);
+            self.chatTextarea[0].selectionStart = self.chatTextarea[0].selectionEnd = startPos + 1;
+            self.adjustTextareaHeight();
         },
         adjustTextareaHeight: function () {
             let lines = this.chatTextarea.val().split('\n');
@@ -272,7 +299,6 @@ define([
                 this.chatTextarea[0].style.height = requiredHeight + 'px';
             }
         },
-
         displayUserList: function (callback) {
             this.userList.empty();
 
@@ -325,19 +351,119 @@ define([
                 callback();
             }
         },
-        adjustLatestMessage: function () {
-            let latestMessage = this.getLatestMessage();
-            let userItem = $(`.user-item[data-chat-id="${this.selectedChatId}"]`);
+        appendUser: function (user) {
+            let userItem = $('<div></div>')
+                .addClass('user-item')
+                .attr('data-chat-id', user.id);
+            
+            let userAvatar = $('<div></div>')
+                .addClass('user-avatar')
+                .append($('<img>').attr('src', this.userAvatarImagePath).attr('alt', user.name));
+
+            let userDetails = $('<div></div>')
+                .addClass('user-details')
+                .append($('<h3></h3>').text(user.name))
+                .append($('<p class="latest-message"></p>'));
+
+            let userContainer = $('<div></div>')
+                .addClass('d-flex')
+                .append(userAvatar)
+                .append(userDetails);
+            
+            let userUnreadMessages = $('<div></div>')
+                .append($('<span></span>')
+                .addClass('unread-messages')
+                .text(user.unreadMessages));
+            
+            let latestMessage = user.messages[user.messages.length - 1];
+            
+            if (latestMessage.sender === 'user') {
+                if (latestMessage.type === 'file') {
+                    userDetails.find('.latest-message').text($t('Attachment'));
+                } else {
+                    userDetails.find('.latest-message').text(latestMessage.text);
+                }
+            } else {
+                userDetails.find('.latest-message').text($t('Sent'));
+            }
+
+            userItem.append(userContainer);
+            if (user.unreadMessages > 0) { 
+                userItem.append(userUnreadMessages);
+            }
+            
+            // userItem.insertBefore(this.userList.children()[0]);
+            this.userList.prepend(userItem);
+        },
+        removeUser: function(user = false) {
+            let chatId = user ? user.id : this.selectedChatId;
+            let userItem = $(`.user-item[data-chat-id="${chatId}"]`);
+            userItem.remove();
+        },
+        updateUser: function (user, data) {
+            let self = this;
+            self.pushMessageFromUser(data, user);
+            self.adjustLatestMessage(user);
+            user.unreadMessages = user.unreadMessages ? user.unreadMessages + 1 : 1;
+            self.changePosition(user.id);
+        },
+        createUser: function (data) {
+            let self = this;
+            
+            $.ajax({
+                url: self.getUserUrl,
+                type: 'POST',
+                dataType: 'JSON',
+                data: {
+                    chatId: data.chatId
+                },
+                success: function (response) {
+                    let user = response.user;
+                    self.users.unshift(user);
+                    self.totalChats.text(self.users.length);
+                    self.appendUser(user);
+                }
+            });
+        },
+        changePosition: function (chatId) {
+            // change position array:
+            let user = this.users.find(user => user.id == chatId);
+            this.users = this.users.filter(user => user.id != chatId);
+            this.users.unshift(user);
+
+            // change position DOM:
+            let userItem = $(`.user-item[data-chat-id="${chatId}"]`);
+            userItem.remove();
+            this.userList.prepend(userItem);
+        },
+        displayUnreadMessages: function(user) {
+            let userItem = $(`.user-item[data-chat-id="${user.id}"]`);
+            let unreadMessages = userItem.find('.unread-messages');
+
+            if (unreadMessages.length) {
+                unreadMessages.text(user.unreadMessages);
+            } else {
+                unreadMessages = $('<div></div>')
+                    .append($('<span></span>')
+                    .addClass('unread-messages')
+                    .text(user.unreadMessages));
+                userItem.append(unreadMessages);
+            }
+        },
+        adjustLatestMessage: function (user = false) {
+            let chatId = user ? user.id : this.selectedChatId;
+            let latestMessage = this.getLatestMessage(user);
+            let userItem = $(`.user-item[data-chat-id="${chatId}"]`);
 
             if (latestMessage.sender === 'user') {
                 userItem.find('.latest-message').text(latestMessage.text);
             } else {
-                userItem.find('.latest-message').text('Sent');
+                userItem.find('.latest-message').text($t('Sent'));
             }
         },
 
-        getLatestMessage: function () {
-            let selectedUser = this.getSelectedUser();
+        getLatestMessage: function (user = false) {
+            let selectedUser = user ? user : this.getSelectedUser();
             let latestMessage = selectedUser.messages[selectedUser.messages.length - 1];
             
             return latestMessage;
@@ -363,6 +489,7 @@ define([
                 email: null,
                 message: null,
                 chatId: this.selectedChatId,
+                resourceId: self.resourceId,
                 type: "file",
                 attachment: {
                     name: file.name,
@@ -465,11 +592,14 @@ define([
             let error = false;
 
             if (messageText === '') {
-                text.text('Message cannot be empty.');
+                text.text($t('Message cannot be empty.'));
                 error = true;
 
             }  else if (messageText.length > MAX_LENGTH) {
-                text.text(`Message length cannot exceed ${MAX_LENGTH} characters.`);
+                text.text(
+                    $t('Message length cannot exceed %1 characters.')
+                    .replace('%1', MAX_LENGTH)
+                );
                 error = true;
             }
 
@@ -515,16 +645,35 @@ define([
                     messageDiv.append(this.renderFile(message.originalName, message.path));
 
                 } else {
-                    messageDiv.text(message.text);
+                    messageDiv.html(message.text.replace(/\n/g, '<br>'));
                 }
 
                 this.chatMessages.append(messageDiv);
             });
             this.scrollToBottom();
         },
-        pushMessage: function (data) {
-            let selectedUser = this.getSelectedUser();
+        appendMessage: function(message) {
+            this.clearErrorMessage();
+            let messageDiv = $('<div></div>')
+                .addClass(`message-chat ${message.sender}`);
 
+            if (message.type === 'file') {
+                messageDiv.append(this.renderFile(message.originalName, message.path));
+
+            } else {
+                messageDiv.html(message.text.replace(/\n/g, '<br>'));
+            }
+            this.chatMessages.append(messageDiv);
+            this.scrollToBottom();
+        },
+        pushMessage: function (data, user = false) {
+            let selectedUser;
+
+            if (user) {
+                selectedUser = user
+            } else {
+                selectedUser = this.getSelectedUser();
+            }
             if (data.type === "text") {
                 selectedUser.messages.push({
                     sender: "admin",
@@ -540,6 +689,22 @@ define([
                 });
             }
             selectedUser.messages.push();
+        },
+        pushMessageFromUser: function (data, user) {
+            if (data.type === "text") {
+                user.messages.push({
+                    sender: data.sender,
+                    type: data.type,
+                    text: data.message
+                });
+            } else if (data.type === 'file') {
+                user.messages.push({
+                    sender: data.sender,
+                    type: data.type,
+                    originalName: data.originalName,
+                    path: data.path
+                });
+            }
         },
         displayWelcomeMessage: function () {
             this.chatArea.hide();
@@ -558,7 +723,7 @@ define([
         getSelectedUser: function () {
             return this.users.find(user => user.id == this.selectedChatId);
         },
-        updateChatHeader: function (data) {
+        updateChatHeader: function (callback = false) {
             let selectedUser = this.getSelectedUser();
             let customerNameElement = $('.chat-customer .customer');
             let customerEmailElement = $('.chat-customer .email');
@@ -576,11 +741,13 @@ define([
             }
             
             customerEmailElement.text(selectedUser.email);
-            createdAtElement.text(data.createdAt);
+            createdAtElement.text(selectedUser.chat.createdAt);
             statusDiv.find("option").prop('selected', false); 
-            statusDiv.find("[value='" + data.statusId + "']").prop('selected', true);
-            // statusDiv.text(data.statusLabel);
-            statusDiv.removeClass().addClass(data.status)
+            statusDiv.find("[value='" + selectedUser.chat.statusId + "']").prop('selected', true);
+            statusDiv.removeClass().addClass(selectedUser.chat.statusClass)
+            if (callback && typeof callback === 'function') {
+                callback();
+            }
         },
         updateUnreadMessages: function () {
             let self = this;
@@ -595,6 +762,7 @@ define([
                 success: function (response) {
                     if (response.success) {
                         console.log('Unread messages updated');
+                        self.getSelectedUser().unreadMessages = 0;
                         let userItem = $(`.user-item[data-chat-id="${self.selectedChatId}"]`);
                         userItem.find('.unread-messages').remove();
                     }
@@ -632,6 +800,10 @@ define([
         },
         handleTyping: function (data) {
             let self = this;
+
+            if (data.chatId != this.selectedChatId) {
+                return;
+            }
             let isShown = $("#chat-admin-container .typing-event").length;
             if (!isShown && data.typing) {
                self.showTypingMessage();
@@ -640,15 +812,29 @@ define([
                 self.hideTypingMessage();
             }
         },
+        handleLostMessages: function (messages) {
+            let self = this;
+
+            for (let message of messages) {
+                self.createOrUpdateUser(message.chatId, message);
+            }
+        },
         showTypingMessage: function () {
             let typingMessage = $('<div></div>')
                 .addClass('typing-event')
-                .text('User is typing...');
+                .text($t('User is typing...'));
 
             this.chatMessages.append(typingMessage);
         },
         hideTypingMessage: function () {
             $("#chat-admin-container .typing-event").remove();
         },
+        notifyAdminsUserClick: function() {
+            this.conn.send(JSON.stringify({
+                notifyAdminsUserClick: true,
+                chatId: this.selectedChatId,
+                resourceId: this.resourceId
+            }));
+        }
     });
 });

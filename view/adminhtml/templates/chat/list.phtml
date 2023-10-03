@@ -102,6 +102,7 @@
 <?php
     $helper = $this->helper(Leeto\TicketLiveChat\Helper\Data::class);
     $getUsersUrl =  $block->getFullUrl('leeto_support/chat/getusers');
+    $getUserUrl =  $block->getFullUrl('leeto_support/chat/getuser');
     $updateChatHeaderUrl =  $block->getFullUrl('leeto_support/chat/updatechatheader');
     $updateUnreadChatMessages = $block->getFullUrl('leeto_support/chat/updateunreadmessages');
     $changeChatStatusControllerUrl = $block->getFullUrl('leeto_support/chat/changechatstatus');
@@ -117,6 +118,7 @@
     "#chat-admin-container": { 
         "Leeto_TicketLiveChat/js/chat/list": {
             "getUsersUrl": "<?= $escaper->escapeHtml($getUsersUrl) ?>",
+            "getUserUrl": "<?= $escaper->escapeHtml($getUserUrl) ?>",
             "updateChatHeaderUrl": "<?= $escaper->escapeHtml($updateChatHeaderUrl) ?>",
             "changeChatStatusControllerUrl": "<?= $escaper->escapeHtml($changeChatStatusControllerUrl) ?>",
             "updateUnreadChatMessages": "<?= $escaper->escapeHtml($updateUnreadChatMessages) ?>",

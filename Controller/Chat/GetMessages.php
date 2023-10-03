@@ -196,7 +196,7 @@ class GetMessages extends Action
         if (count($chatRepositoryItem)) {
             $chatRepositoryItem = $chatRepositoryItem[0];
 
-            if ($chatRepositoryItem->getUuid() !== $uuid) {
+            if (!$userId && $chatRepositoryItem->getUuid() !== $uuid) {
                 return [
                     'error' => __('This email is already in use')
                 ];

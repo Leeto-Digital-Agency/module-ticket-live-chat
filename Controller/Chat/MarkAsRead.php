@@ -70,6 +70,7 @@ class MarkAsRead extends Action
             return $result->setData(['success' => true]);
         } catch (\Exception $e) {
             $this->logger->critical($e->getMessage());
+            $result->setHttpResponseCode(400);
             return $result->setData(['succes' => false, 'error' => $e->getMessage()]);
         }
     }

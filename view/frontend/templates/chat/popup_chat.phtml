@@ -94,27 +94,27 @@
                         <?php
                             $createTicketUrl = $this->getUrl('support/ticket/index');
                         ?>
-                        <?= $escaper->escapeHtml(
+                        <?=
                             __(
                                 'The administrator is currently unavailable; please create a support ticket
                                 %1here%2 to fix your issue.',
                                 '<a class="text-underline" href="' . $escaper->escapeHtml($createTicketUrl) . '">',
                                 '</a>'
                             )
-                        ) ?>
+                            ?>
                     </p>
                 </div>
                 <div class="thank-you-wrapper">
                     <p class="thank-you-message"></p>
                     <a href="#" class="ticket-link text-underline"></a>
                     <p>
-                        <?= $escaper->escapeHtml(
+                        <?=
                             __(
                                 'Start a new chat %1here%2',
                                 '<a id="start-new-chat" class="text-underline" href="#">',
                                 '</a>'
                             )
-                        ) ?>
+                            ?>
                     </p>
                 </div>
             </div>
@@ -127,13 +127,13 @@
                 <a href="#" class="ticket-link text-underline"></a>
                 <div class="chat-closed-buttons">
                     <p>
-                        <?= $escaper->escapeHtml(
+                        <?=
                             __(
                                 'Start a new chat %1here%2',
                                 '<a id="start-new-chat" class="text-underline" href="#">',
                                 '</a>'
                             )
-                        ) ?>
+                            ?>
                     </p>
                 </div>
             </div>

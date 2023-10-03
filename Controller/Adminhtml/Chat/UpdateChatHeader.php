@@ -95,9 +95,11 @@ class UpdateChatHeader extends Action
 
     public function execute()
     {
+        $result = $this->resultJsonFactory->create();
+
         try {
             $chatId = $this->getRequest()->getParam('chatId');
-
+            
             $searchCriteria = $this->searchCriteriaBuilder
                 ->addFilter('chat_id', $chatId, 'eq')
                 ->setPageSize(1)
@@ -114,11 +116,9 @@ class UpdateChatHeader extends Action
                 'statusLabel' => $statusLabel,
                 'statusId' => $chatStatus->getStatusId()
             ];
-            $result = $this->resultJsonFactory->create();
 
             return $result->setData($data);
         } catch (\Exception $e) {
-            $result = $this->resultJsonFactory->create();
             return $result->setData(['error' => $e->getMessage()]);
         }
     }
