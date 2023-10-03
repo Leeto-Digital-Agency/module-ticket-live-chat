@@ -1,5 +1,12 @@
 <?xml version="1.0" ?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+	<type name="Magento\Framework\Console\CommandList">
+		<arguments>
+			<argument name="commands" xsi:type="array">
+				<item name="WebSocketServer" xsi:type="object">Leeto\TicketLiveChat\Console\Command\WebSocketServer</item>
+			</argument>
+		</arguments>
+	</type>
 	<preference for="Leeto\TicketLiveChat\Api\TicketRepositoryInterface" type="Leeto\TicketLiveChat\Model\TicketRepository"/>
 	<preference for="Leeto\TicketLiveChat\Api\Data\TicketInterface" type="Leeto\TicketLiveChat\Model\Data\Ticket"/>
 	<preference for="Leeto\TicketLiveChat\Api\Data\TicketSearchResultsInterface" type="Magento\Framework\Api\SearchResults"/>
@@ -21,12 +28,4 @@
 	<preference for="Leeto\TicketLiveChat\Api\AttachmentRepositoryInterface" type="Leeto\TicketLiveChat\Model\AttachmentRepository"/>
 	<preference for="Leeto\TicketLiveChat\Api\Data\AttachmentInterface" type="Leeto\TicketLiveChat\Model\Attachment"/>
 	<preference for="Leeto\TicketLiveChat\Api\Data\AttachmentSearchResultsInterface" type="Magento\Framework\Api\SearchResults"/>
-	
-	<type name="Magento\Framework\Console\CommandList">
-		<arguments>
-			<argument name="commands" xsi:type="array">
-				<item name="WebSocketServer" xsi:type="object">Leeto\TicketLiveChat\Console\Command\WebSocketServer</item>
-			</argument>
-		</arguments>
-	</type>
 </config>
