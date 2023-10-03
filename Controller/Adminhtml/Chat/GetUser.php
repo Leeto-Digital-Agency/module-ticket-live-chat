@@ -18,8 +18,10 @@ use Leeto\TicketLiveChat\Helper\Chat\ChatStatusHelper;
 use Magento\Framework\Api\SortOrderBuilder;
 use Leeto\TicketLiveChat\Model\ChatMessageAttachmentFactory;
 use Magento\Framework\Stdlib\DateTime\DateTime;
+use Psr\Log\LoggerInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
 
-class GetUsers extends Action
+class GetUser extends Action
 {
     protected $resultFactory;
 
@@ -89,6 +91,11 @@ class GetUsers extends Action
     protected $dateTime;
 
     /**
+     * @var LoggerInterface
+     */
+    protected $logger;
+
+    /**
      * @param Context                        $context
      * @param ResultFactory                  $resultFactory
      * @param ChatRepositoryInterface        $chatRepository
@@ -104,6 +111,7 @@ class GetUsers extends Action
      * @param ChatStatusHelper               $chatStatusHelper
      * @param ChatMessageAttachmentFactory   $chatMessageAttachmentFactory
      * @param DateTime                       $dateTime
+     * @param LoggerInterface                $logger
      */
     public function __construct(
         Context                        $context,
@@ -120,7 +128,8 @@ class GetUsers extends Action
         SortOrderBuilder               $sortOrderBuilder,
         ChatStatusHelper               $chatStatusHelper,
         ChatMessageAttachmentFactory   $chatMessageAttachmentFactory,
-        DateTime                       $dateTime
+        DateTime                       $dateTime,
+        LoggerInterface                $logger
     ) {
         $this->resultFactory = $resultFactory;
         $this->chatRepository = $chatRepository;
@@ -136,6 +145,7 @@ class GetUsers extends Action
         $this->chatStatusHelper = $chatStatusHelper;
         $this->chatMessageAttachmentFactory = $chatMessageAttachmentFactory;
         $this->dateTime = $dateTime;
+        $this->logger = $logger;
         parent::__construct($context);
     }
 
@@ -145,37 +155,33 @@ class GetUsers extends Action
     public function execute()
     {
         $result = $this->jsonResultFactory->create();
-        $users = $this->getUsersData();
 
-        $response = ['users' => $users];
-        $result->setData($response);
-        return $result;
-    }
-
-    /**
-     * @return array
-     */
-    private function getUsersData()
-    {
-        $users = [];
-
-        // Get all chats
-        $searchCriteria = $this->searchCriteriaBuilder
-            ->addSortOrder($this->sortOrderBuilder->setField('updated_at')
-                ->setDirection('DESC')->create())
-            ->addFilter('status_id', $this->chatStatusHelper
-                ->getChatStatusId(ChatStatusHelper::ACTIVE_CHAT_STATUS))
-            ->create();
-        $chats = $this->chatRepository->getList($searchCriteria)->getItems();
-
-        foreach ($chats as $chat) {
+        try {
+            $chatId = $this->getRequest()->getParam('chatId');
+            if (!$chatId) {
+                throw new NoSuchEntityException(
+                    __('Chat id is not set')
+                );
+            }
+    
+            $searchCriteria = $this->searchCriteriaBuilder
+                ->addFilter('status_id', $this->chatStatusHelper
+                    ->getChatStatusId(ChatStatusHelper::ACTIVE_CHAT_STATUS))
+                ->addFilter('chat_id', $chatId, 'eq')
+                ->setPageSize(1)
+                ->create();
+            $chat = $this->chatRepository->getList($searchCriteria)->getItems();
+            if (count($chat)) {
+                $chat = $chat[0];
+            }
+    
             // Get all chat messages for this chat and order them by date
             $searchCriteria = $this->searchCriteriaBuilder
                 ->addFilter('chat_id', $chat->getChatId())
                 ->addSortOrder($this->sortOrderBuilder->setField('created_at')->setDirection('ASC')->create())
                 ->create();
             $chatMessages = $this->chatMessageRepository->getList($searchCriteria)->getItems();
-
+    
             // Format chat messages
             $messages = [];
             $unreadMessages = 0;
@@ -183,7 +189,7 @@ class GetUsers extends Action
                 $messageType = 'text';
                 $attachment = $this->chatMessageAttachmentFactory->create()
                     ->load($chatMessage->getMessageId(), 'message_id');
-
+    
                 if ($attachment && $attachment->getId()) {
                     $attachmentId = $attachment->getAttachmentId();
                     $messageType = 'file';
@@ -203,13 +209,13 @@ class GetUsers extends Action
                 if (!$chatMessage->getIsAdmin() && !$chatMessage->getIsRead()) {
                     $unreadMessages++;
                 }
-
+    
                 $messages[] = $message;
             }
             // Format user data
             if (count($chatMessages)) {
                 $customer = null;
-
+    
                 if ($chat->getCustomerId()) {
                     $customer = $this->customerRepositoryInterface->getById($chat->getCustomerId());
                 }
@@ -228,10 +234,15 @@ class GetUsers extends Action
                         'createdAt' => $this->dateTime->gmtDate('d.m.Y', $chat->getCreatedAt())
                     ]
                 ];
-    
-                $users[] = $user;
             }
+    
+            $response = ['user' => $user];
+            $result->setData($response);
+            return $result;
+        } catch (\Exception $e) {
+            $this->logger->critical($e->getMessage());
+            $result->setHttpResponseCode(400);
+            $result->setData(['error' => $e->getMessage()]);
         }
-        return $users;
     }
 }

@@ -74,6 +74,11 @@ class GetChatId extends Action
             $email = $this->getRequest()->getParam('email');
             $uuid = $this->getRequest()->getParam('uuid');
             $customerId = $this->getRequest()->getParam('userId');
+
+            $email = isset($email) && !empty($email) ? $email : null;
+            $uuid = isset($uuid) && !empty($uuid) ? $uuid : null;
+            $customerId = isset($customerId) && !empty($customerId) ? $customerId : null;
+
             if (!$email && !$uuid && !$customerId) {
                 throw new NoSuchEntityException(
                     __('No user id or email provided')
@@ -120,16 +125,13 @@ class GetChatId extends Action
             $searchCriteria = $searchCriteria
                 ->addFilter('uuid', $uuid, 'eq');
         }
-
         $chatRepositoryItem = $this->chatRepository->getList($searchCriteria->create())->getItems();
         if (count($chatRepositoryItem)) {
             $chatRepositoryItem = $chatRepositoryItem[0];
-
-            if ($chatRepositoryItem->getUuid() === $uuid) {
+            if ($userId || $chatRepositoryItem->getUuid() === $uuid) {
                 return $chatRepositoryItem->getChatId();
             }
         }
-
         return null;
     }
 }

@@ -292,7 +292,7 @@ class ChatHelper extends AbstractHelper
         $chatRepositoryItem = $this->chatRepository->getList($searchCriteria->create())->getItems();
         if (count($chatRepositoryItem)) {
             $chatRepositoryItem = $chatRepositoryItem[0];
-            if ($chatId || $chatRepositoryItem->getUuid() === $uuid) {
+            if ($chatId || $userId || $chatRepositoryItem->getUuid() === $uuid) {
                 return $chatRepositoryItem;
             }
         }
@@ -335,7 +335,6 @@ class ChatHelper extends AbstractHelper
             $newChat->setEmail($email);
             $newChat->setUuid($uuid);
             $newChat = $this->chatRepository->save($newChat);
-
             return $newChat;
         } catch (\Exception $e) {
             $this->logger->error('An error has occurred: ' . $e->getMessage());

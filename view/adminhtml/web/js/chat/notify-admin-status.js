@@ -29,6 +29,7 @@ define([
                     newConnection: true,
                     role: "admin"
                 }));
+                self.checkChatUnreadMessages();
             };
             self.conn.onmessage = (event) => {
                 let data = JSON.parse(event.data);

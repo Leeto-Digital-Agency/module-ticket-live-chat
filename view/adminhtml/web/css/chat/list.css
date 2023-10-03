@@ -58,8 +58,8 @@
     border-left: 5px solid #0062cccc;
 }
 #chat-admin-container .user-list .user-item .user-avatar img {
-    width: 36px;
-    height: 36px;
+    width: 65px;
+    height: 40px;
     border-radius: 50%;
     object-fit: cover;
 }
@@ -71,6 +71,7 @@
 }
 #chat-admin-container .user-list .user-item .user-details {
     margin-left: 10px;
+    width: 100%;
 }
 #chat-admin-container .user-list .user-item .user-details h3 {
     margin: 0;
@@ -80,6 +81,10 @@
 #chat-admin-container .user-list .user-item .user-details .latest-message {
     color: #999;
     font-size: 14px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
 }
 #chat-admin-container .chat-area {
     width: 75%;

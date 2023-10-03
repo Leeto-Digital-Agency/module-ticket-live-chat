@@ -73,9 +73,14 @@ class ChatServer implements MessageComponentInterface
     protected $clientsChatConnectionMapping = [];
 
     /**
-     * @var ConnectionInterface
+     * @var array
      */
-    protected $adminChatConnection = null;
+    protected $adminChatConnection = [];
+
+    /**
+     * @var array
+     */
+    protected $lostMessages = [];
 
     /**
      * @var UrlInterface
@@ -195,6 +200,9 @@ class ChatServer implements MessageComponentInterface
             if (isset($data['typingEvent'])) {
                 $this->handleTyping($data);
             }
+            if (isset($data['notifyAdminsUserClick'])) {
+                $this->handleNotifyAdminsUserClick($data);
+            }
         } catch (\Exception $e) {
             $this->logger->error('An error has occurred: ' . $e->getMessage());
         }
@@ -241,7 +249,7 @@ class ChatServer implements MessageComponentInterface
             $chat = $this->chatHelper->getChat($userId, $email, $uuid, $chatId);
             $chatId = $chat && $chat->getChatId() ? $chat->getChatId() : null;
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            $this->logger->error('An error has occurred: ' . $e->getMessage());
         }
         if (!$chatId) {
             // Create a new chat and add the connection to it
@@ -291,24 +299,37 @@ class ChatServer implements MessageComponentInterface
             }
             if ($newChatMessage) {
                 $this->updateChat($chatId);
-                $dataToSend = $this->jsonSerializer->serialize([
+                $dataToSend = [
                     'newMessage' => true,
                     'chatId' => $chatId,
                     'message' => $data['message'],
                     'type' => $data['type'],
                     'path' => $filePath ?? null,
+                    'sender' => $data['isAdmin'] ? 'admin' : 'user',
                     'originalName' => $data['attachment']['name'] ?? null,
                     'status' => 'success',
-                ]);
+                ];
 
                 if (!$data['isAdmin']) {
-                    if ($this->adminChatConnection) {
-                        $this->adminChatConnection->send($dataToSend);
+                    if (!count($this->adminChatConnection)) {
+                        $this->lostMessages[] = $dataToSend;
                     }
                 } else {
                     if (isset($this->clientsChatConnectionMapping[$chatId])) {
                         $client = $this->clientsChatConnectionMapping[$chatId];
-                        $client->send($dataToSend);
+                        $client->send(
+                            $this->jsonSerializer->serialize($dataToSend)
+                        );
+                    }
+                }
+                if (count($this->adminChatConnection)) {
+                    foreach ($this->adminChatConnection as $adminConnection) {
+                        if (isset($data['resourceId']) && $adminConnection->resourceId == $data['resourceId']) {
+                            continue;
+                        }
+                        $adminConnection->send(
+                            $this->jsonSerializer->serialize($dataToSend)
+                        );
                     }
                 }
             }
@@ -328,10 +349,9 @@ class ChatServer implements MessageComponentInterface
         $maxLength = 2000;
         $errors = [];
 
-        if (
-            !isset($data['type'])
-            || empty($data['type']
-                || !in_array($data['type'], $allowedMessageTypes))
+        if (!isset($data['type']) ||
+            empty($data['type'] ||
+            !in_array($data['type'], $allowedMessageTypes))
         ) {
             $errors['errorMessages'][] = __('Something went wrong, your message could not be sent.');
             $this->logger->error(__('Message type is missing.'));
@@ -392,10 +412,13 @@ class ChatServer implements MessageComponentInterface
             unset($this->clientsChatConnectionMapping[$chatId]);
             $this->clients->detach($conn);
         } else {
-            sleep(3);
+            // sleep(3);
             if (!$this->helper->isBackendAdminLoggedIn()) {
                 $this->clients->detach($conn);
-                $this->adminChatConnection = null;
+                // remove connection from array
+                $key = array_search($conn, $this->adminChatConnection);
+                unset($this->adminChatConnection[$key]);
+
                 $this->notifyUsersAdminStatus();
             }
         }
@@ -437,7 +460,7 @@ class ChatServer implements MessageComponentInterface
      */
     public function getAdminStatus()
     {
-        return $this->adminChatConnection ? 'online' : 'offline';
+        return count($this->adminChatConnection) ? 'online' : 'offline';
     }
 
     /**
@@ -501,8 +524,13 @@ class ChatServer implements MessageComponentInterface
     public function handleNewConnection($from, $data)
     {
         if (isset($data['role']) && $data['role'] === 'admin') {
-            $this->adminChatConnection = $from;
+            $this->adminChatConnection[] = $from;
             $this->notifyUsersAdminStatus();
+            $this->notifyAdminResourceId($from);
+            if (!empty($this->lostMessages)) {
+                $this->notifyAdminUserMessages($this->lostMessages);
+                $this->lostMessages = [];
+            }
         } else {
             if (isset($data['chatId']) && $data['chatId']) {
                 $this->addConnectionToChat($from, $data['chatId']);
@@ -527,24 +555,83 @@ class ChatServer implements MessageComponentInterface
         $this->updateConnectionToTemporaryId($data['chatId']);
     }
 
+    /**
+     * @param $data
+     * @return void
+     */
     public function handleTyping($data)
     {
         $chatId = $data['chatId'];
         $dataToSend = [
             'typeEvent' => true,
-            'typing' => $data['typing']
+            'typing' => $data['typing'],
+            'chatId' => $chatId,
+            'isAdmin' => $data['isAdmin']
         ];
 
         if (!$data['isAdmin']) {
-            if ($this->adminChatConnection) {
-                $this->adminChatConnection->send(
-                    $this->jsonSerializer->serialize($dataToSend)
-                );
+            if (count($this->adminChatConnection)) {
+                foreach ($this->adminChatConnection as $adminConnection) {
+                    $adminConnection->send(
+                        $this->jsonSerializer->serialize($dataToSend)
+                    );
+                }
             }
         } else {
             if (isset($this->clientsChatConnectionMapping[$chatId])) {
                 $client = $this->clientsChatConnectionMapping[$chatId];
                 $client->send(
+                    $this->jsonSerializer->serialize($dataToSend)
+                );
+            }
+        }
+    }
+
+    /**
+     * @param array @messages
+     * @return void
+     */
+    public function notifyAdminUserMessages($messages)
+    {
+        foreach ($this->adminChatConnection as $adminConnection) {
+            $adminConnection->send(
+                $this->jsonSerializer->serialize([
+                    'lostMessages' => true,
+                    'messages' => $messages
+                ])
+            );
+        }
+    }
+
+    /**
+     * @param ConnectionInterface $from
+     * @return void
+     */
+    public function notifyAdminResourceId($from)
+    {
+        $from->send(
+            $this->jsonSerializer->serialize([
+                'resourceId' => $from->resourceId
+            ])
+        );
+    }
+
+    /**
+     * @param $data
+     * @return void
+     */
+    public function handleNotifyAdminsUserClick($data)
+    {
+        $dataToSend = [
+            'notifyAdminsUserClick' => true,
+            'chatId' => $data['chatId'],
+        ];
+        if (count($this->adminChatConnection)) {
+            foreach ($this->adminChatConnection as $adminConnection) {
+                if (isset($data['resourceId']) && $adminConnection->resourceId == $data['resourceId']) {
+                    continue;
+                }
+                $adminConnection->send(
                     $this->jsonSerializer->serialize($dataToSend)
                 );
             }
