@@ -49,22 +49,8 @@ define([
             var self = this;
 
             this.userList.on('click', '.user-item', $.proxy(this.handleUserItemClick, this));
-            $('.chat-input button').on('click', async function () {
-                let isLatestFromUser = await self.getIsLatestMessageFromUser();
-                if (isLatestFromUser) {
-                    self.chatTextarea.attr('disabled', true);
-                    self.fileInput.attr('disabled', true);
-                    $('.chat-input button').addClass('disabled');
-                    $('.chat-input button').text('Sending...');
-                    self.handleSendMessage(function () {
-                        self.chatTextarea.attr('disabled', false);
-                        self.fileInput.attr('disabled', false);
-                        $('.chat-input button').removeClass('disabled');
-                        $('.chat-input button').text('Send');
-                    });
-                } else {
-                    self.handleSendMessage();
-                }
+            $('.chat-input button').on('click', function () {
+                self.handleSendMessage();
             });
 
             this.chatTextarea.on('keydown', function (event) {
@@ -116,20 +102,17 @@ define([
                 });
             });
         },
-        getIsLatestMessageFromUser: async function () {
-            let self = this;
-            let response;
-            response = await $.ajax({
-                url: self.messageControllerUrl,
-                type: 'POST',
-                dataType: 'JSON',
-                data: { 
-                    ticket_id: self.ticketId,
-                    latest_user: true
-                },
-            });
-
-            return response.isLatestMessageFromUser;
+        prepareSendingMessage: function () {
+            this.chatTextarea.attr('disabled', true);
+            this.fileInput.attr('disabled', true);
+            $('.chat-input button').addClass('disabled');
+            $('.chat-input button').text('Sending...');
+        },
+        finishSendingMessage: function () {
+            this.chatTextarea.attr('disabled', false);
+            this.fileInput.attr('disabled', false);
+            $('.chat-input button').removeClass('disabled');
+            $('.chat-input button').text('Send');
         },
         handleUserItemClick: async function (event) {
             var self = this;
@@ -314,8 +297,9 @@ define([
                 }
             }
         },
-        handleSendMessage: async function (callback) {
+        handleSendMessage: async function () {
             this.clearErrorMessage();
+            this.prepareSendingMessage();
             let messageText = this.chatTextarea.val().trim();
             let files = this.fileInput[0].files;
             messageText = messageText.replace(/\n/g, '<br>');
@@ -323,11 +307,13 @@ define([
             let filesData = await this.getFiles(files); 
             
             if (this.validateTextarea()) {
+                self.finishSendingMessage();
                 return;
             }
             if (files.length > 0 && !filesData) {
                 self.fileInput.val('');
                 self.uploadedFiles.text('');
+                self.finishSendingMessage();
                 return;
             }
             $.ajax({
@@ -354,9 +340,7 @@ define([
                     self.fileInput.val('');
                     self.uploadedFiles.text('');
                     self.updateTicketImage();
-                    if (callback && typeof callback === 'function') {
-                        callback();
-                    }
+                    self.finishSendingMessage();
                 },
                 error: function (xhr, status, error) {
                     console.log(error);
