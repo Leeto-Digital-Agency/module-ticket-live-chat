@@ -413,6 +413,14 @@
     height: 40px;
     animation: spin 2s linear infinite;
 }
+#ticket-admin-container .chat-area .loading-container-messages {
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    background-color: white;
+    position: relative;
+    flex: 1;
+}
 #ticket-admin-container .user-list-wrapper .loading-container {
     display: none;
     justify-content: center;
