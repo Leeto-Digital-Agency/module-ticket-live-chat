@@ -40,6 +40,7 @@ define([
             this.ticketMessage = $('#ticket-admin-container');
             this.loadingDivChatArea = $('#ticket-admin-container .chat-area .loading-container');
             this.loadingDivUserList = $('#ticket-admin-container .user-list-wrapper .loading-container');
+            this.loadingDivMessages = $('#ticket-admin-container .chat-area .loading-container-messages');
             this.statusGroup = $('#ticket-admin-container .ticket-status-grouped');
             this.chatsInfo = $('#ticket-admin-container .chats-info');
             this.refreshButton = $('.refresh-button button');
@@ -230,7 +231,9 @@ define([
             this.statusModal.find('#modalYesBtn').off('click');
             this.statusModal.find('#modalNoBtn').off('click');
             this.statusModal.find('#modalYesBtn').on('click', function () {
+                self.statusModal.hide();
                 var statusValue = target.val();
+                self.loadingDivChatArea.css('display', 'flex');
                 $.ajax({
                     url: self.changeTicketStatusControllerUrl,
                     type: 'POST',
@@ -240,9 +243,10 @@ define([
                         status_value: statusValue
                     },
                     success: function (response) {
-                        self.statusModal.hide();
                         self.fetchChatHeaderData(self.ticketId);
-                        self.loadMessages();
+                        self.loadMessages(function () {
+                            self.loadingDivChatArea.hide();
+                        });
                         self.statusGroup.find('[data-status-id="' + statusValue + '"]').trigger('click');
                     },
                     error: function (xhr, status, error) {
@@ -327,7 +331,12 @@ define([
                 },
                 success: function (response) {
                     self.adjustLatestMessage();
-                    self.loadMessages();
+                    self.chatMessages.hide();
+                    self.loadingDivMessages.css('display', 'flex');
+                    self.loadMessages(function () {
+                        self.loadingDivMessages.hide();
+                        self.chatMessages.css('display', 'flex');
+                    });
                     if (response.error) {
                         let errorMessage = $('<div class="error-message"><div class="text"></div></div>');
                         let text = errorMessage.find('.text');
@@ -456,7 +465,6 @@ define([
             var self = this;
             this.chatMessages.empty();
             this.clearErrorMessage();
-            
             $.ajax({
                 url: this.messageControllerUrl,
                 type: 'POST',
