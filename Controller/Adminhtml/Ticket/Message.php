@@ -37,15 +37,8 @@ class Message extends Action
     public function execute()
     {
         $ticketId = $this->getRequest()->getParam('ticket_id');
-        $latestUser = $this->getRequest()->getParam('latest_user');
-
         $result = $this->resultJsonFactory->create();
-        $data = [];
-        if ($latestUser) {
-            $isLatestMessageFromUser = $this->ticketMessageHelper->isLatestMessageFromUser($ticketId);
-            $data['isLatestMessageFromUser'] = $isLatestMessageFromUser;
-            return $result->setData($data);
-        }
+        
         $data = $this->ticketMessageHelper->getTicketMessages($ticketId);
 
         return $result->setData($data);
