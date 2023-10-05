@@ -158,6 +158,7 @@ class TicketStatusHelper extends AbstractHelper
         $messageData = [
             'chat_id' => $chat->getId(),
             'message' => 'Ticket status set to ' . $statusLabel . ' by admin',
+            'is_admin' => true,
             'is_alert' => true
         ];
 

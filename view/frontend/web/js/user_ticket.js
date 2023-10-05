@@ -13,6 +13,7 @@ define([
             this.attachEventHandlers();
             this.ticketId = $("#ticket-user-container").attr('data-ticket-id');
             this.isTicketClosed = false;
+            this.ticketStatusLabel = '';
             this.ticketControllerUrl = config.ticketControllerUrl;
             this.messageControllerUrl = config.messageControllerUrl;
             this.addAdminMessageControllerUrl = config.addAdminMessageControllerUrl;
@@ -38,50 +39,18 @@ define([
         attachEventHandlers: function () {
             var self = this;
 
-            $('.chat-input button').on('click', function (event) {
-                if (self.isTicketClosed) {
-                    var options = {
-                        type: 'popup',
-                        responsive: true,
-                        innerScroll: true,
-                        title: "Do you want to reopen the ticket?",
-                        modalClass: "confirmation-modal",
-                        buttons: [
-                            {
-                                text: "Yes",
-                                class: "action-primary",
-                                click: function () {
-                                    self.reopenTicket(self.ticketId, function (event) {
-                                        self.handleSendMessage(event);
-                                    });
-                                    this.closeModal();
-                                }
-                            },
-                            {
-                                text: "No",
-                                class: "action-secondary",
-                                click: function () {
-                                    this.closeModal();
-                                }
-                            }
-                        ]
-                    };
-            
-                    modal(options, self.confirmationModal);
-            
-                    self.confirmationModal.modal('openModal');
-
-                    // $('#confirmButton').on('click', function() {
-                    //     self.reopenTicket(self.ticketId, function (event) {
-                    //         self.handleSendMessage(event);
-                    //     });
-                    //     self.confirmationModal.modal('closeModal');
-                    // });
-                    // $('#cancelButton').on('click', function() {
-                    //     self.confirmationModal.modal('closeModal');
-                    // });
+            $('#ticket-user-container .chat-input button').on('click', async function (event) {
+                let isTicketClosedFromAdmin = await self.getIsTicketClosed();
+                let isTicketNotUpdated = await self.getIsTicketNotUpdated();
+                if (isTicketNotUpdated) {
+                    self.fetchChatHeaderData(self.ticketId);
+                    if (isTicketClosedFromAdmin) {
+                        self.openStatusChangeModal();
+                    } else {
+                        self.handleSendMessage();
+                    }
                 } else {
-                    self.handleSendMessage(event);
+                    self.handleSendMessage();
                 }
             });
 
@@ -109,13 +78,46 @@ define([
                 }
             });
         },
-        displayChatAreaWithData: async function (event) {
-            this.fetchChatHeaderData(this.ticketId);
-            this.chatArea.css('display', 'flex');
-            this.loadingDiv.remove();
-            this.scrollToBottom();
+        openStatusChangeModal: function() {
+            var self = this;
+            var options = {
+                type: 'popup',
+                responsive: true,
+                innerScroll: true,
+                title: "Do you want to reopen the ticket?",
+                modalClass: "confirmation-modal",
+                buttons: [
+                    {
+                        text: "Yes",
+                        class: "action-primary",
+                        click: function () {
+                            self.reopenTicket(self.ticketId, function (event) {
+                                self.handleSendMessage();
+                            });
+                            this.closeModal();
+                        }
+                    },
+                    {
+                        text: "No",
+                        class: "action-secondary",
+                        click: function () {
+                            this.closeModal();
+                        }
+                    }
+                ]
+            };
+            modal(options, self.confirmationModal);
+            self.confirmationModal.modal('openModal');
         },
-        fetchChatHeaderData: function (ticketId) {
+        displayChatAreaWithData: async function (event) {
+            var self = this;
+            this.fetchChatHeaderData(this.ticketId, function (event) {
+                self.chatArea.css('display', 'flex');
+                self.loadingDiv.remove();
+                self.scrollToBottom();
+            });
+        },
+        fetchChatHeaderData: function (ticketId, callback) {
             var self = this;
 
             $.ajax({
@@ -127,6 +129,9 @@ define([
                 },
                 success: function (response) {
                     self.updateChatHeader(response);
+                    if (callback && typeof callback === 'function') {
+                        callback();
+                    }
                 },
                 error: function (xhr, status, error) {
                     console.log(error);
@@ -163,28 +168,33 @@ define([
             }
             if (data.isTicketOpened) {
                 statusDiv.addClass('active');
+                self.ticketStatusLabel = 'opened';
             } else if (data.isTicketPending) {
                 statusDiv.addClass('pending');
+                self.ticketStatusLabel = 'pending';
             } else if (data.isTicketClosed) {
                 self.isTicketClosed = true;
+                self.ticketStatusLabel = 'closed';
                 statusDiv.addClass('closed');
             }
             statusElement.append(statusDiv);
         },
-        handleSendMessage: async function (event) {
+        handleSendMessage: async function () {
             this.clearErrorMessage();
+            this.prepareSendingMessage();
             let messageText = this.chatTextarea.val().trim();
             let files = this.fileInput[0].files;
             var self = this;
             messageText = messageText.replace(/\n/g, '<br>');
             let filesData = await this.getFiles(files);
-
             if (this.validateTextarea()) {
+                self.finishSendingMessage();
                 return;
             }
             if (files.length > 0 && !filesData) {
                 self.fileInput.val('');
                 self.uploadedFiles.text('');
+                self.finishSendingMessage();
                 return;
             }
             $.ajax({
@@ -209,11 +219,54 @@ define([
                     self.adjustTextareaHeight();
                     self.fileInput.val('');
                     self.uploadedFiles.text('');
+                    self.finishSendingMessage();
                 },
                 error: function (xhr, status, error) {
                     console.log(error);
                 }
             });
+        },
+        prepareSendingMessage: function () {
+            this.chatTextarea.attr('disabled', true);
+            this.fileInput.attr('disabled', true);
+            $('.chat-input button').text('Sending...');
+            $('.chat-input button').addClass('disabled');
+        },
+        finishSendingMessage: function () {
+            this.chatTextarea.attr('disabled', false);
+            this.fileInput.attr('disabled', false);
+            $('.chat-input button').text('Send');
+            $('.chat-input button').removeClass('disabled');
+        },
+        getIsTicketClosed: async function () {
+            let self = this;
+            let response;
+            response = await $.ajax({
+                url: self.ticketControllerUrl,
+                type: 'POST',
+                dataType: 'JSON',
+                data: { 
+                    ticket_id: self.ticketId,
+                    isTicketClosed: true
+                },
+            });
+
+            return response.isTicketClosedFromAdmin;
+        },
+        getIsTicketNotUpdated: async function () {
+            let self = this;
+            let response;
+            response = await $.ajax({
+                url: self.ticketControllerUrl,
+                type: 'POST',
+                dataType: 'JSON',
+                data: { 
+                    status_label: self.ticketStatusLabel,
+                    isTicketNotUpdated: true
+                },
+            });
+
+            return response.isTicketNotUpdated;
         },
         getFiles: async function (files) {
             let filesData = [];
@@ -373,7 +426,7 @@ define([
         displayLatestMessage: function (data) {
             let messageTemplate = this.getTicketMessageTemplate();
             var self = this;
-            if (!data.sender) {
+            if (data.isAlert && parseInt(data.isAlert)) {
                 let alertmessage = $('<div class="alert-message info"></div>');
                 alertmessage.text(data.alertMessage);
                 self.chatMessages.append(alertmessage);
@@ -391,7 +444,7 @@ define([
                 }
                 if (data.message) {
                     let messageDiv = $('<div class="message"></div>');
-                    messageDiv.text(data.message);
+                    messageDiv.html(data.message);
                     messageTemplate.find('.detailed-info').append(messageDiv);
                 }
                 if (data.files) {

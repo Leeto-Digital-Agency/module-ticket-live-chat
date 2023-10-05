@@ -229,7 +229,7 @@ class TicketDataHelper extends AbstractHelper
     {
         $ticketsCollection = $this->ticketCollectionFactory->create();
         $ticketsCollection->addFieldToFilter('status_id', $statusId)
-            ->setOrder('created_at', 'DESC');
+            ->setOrder('updated_at', 'DESC');
 
         $customerModel = $this->customerModelFactory->create();
         $data = [];

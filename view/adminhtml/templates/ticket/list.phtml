@@ -4,8 +4,8 @@
 <div id="ticket-admin-container">
     <div class="user-list-wrapper">
         <div class="ticket-status-grouped">
-            <?php foreach ($ticketStatuses as $ticketStatus): ?>
-                <div class="status" 
+            <?php foreach ($ticketStatuses as $key => $ticketStatus): ?>
+                <div class="status <?= $key == 0 ? 'first' : '' ?>" 
                     data-status-id="<?= $escaper->escapeHtml($ticketStatus['value']) ?>"
                     ><?= $escaper->escapeHtml($ticketStatus['label']) ?></div>
             <?php endforeach; ?>
@@ -39,6 +39,9 @@
                     <span class="title"><?= $escaper->escapeHtml(__('Subject:')) ?></span>
                     <span class="subject"></span>
                 </div>
+            </div>
+            <div class="refresh-button">
+                <button><?= $escaper->escapeHtml(__("Refresh ticket")) ?></button>
             </div>
             <div class="right-info">
                 <div class="ticket-date">

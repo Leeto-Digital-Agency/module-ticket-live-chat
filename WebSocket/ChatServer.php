@@ -200,8 +200,8 @@ class ChatServer implements MessageComponentInterface
             if (isset($data['typingEvent'])) {
                 $this->handleTyping($data);
             }
-            if (isset($data['notifyAdminsUserClick'])) {
-                $this->handleNotifyAdminsUserClick($data);
+            if (isset($data['notifyAdmins'])) {
+                $this->handleNotifyAdmins($data);
             }
         } catch (\Exception $e) {
             $this->logger->error('An error has occurred: ' . $e->getMessage());
@@ -620,11 +620,12 @@ class ChatServer implements MessageComponentInterface
      * @param $data
      * @return void
      */
-    public function handleNotifyAdminsUserClick($data)
+    public function handleNotifyAdmins($data)
     {
         $dataToSend = [
-            'notifyAdminsUserClick' => true,
+            'notifyAdmins' => true,
             'chatId' => $data['chatId'],
+            'eventType' => $data['eventType']
         ];
         if (count($this->adminChatConnection)) {
             foreach ($this->adminChatConnection as $adminConnection) {

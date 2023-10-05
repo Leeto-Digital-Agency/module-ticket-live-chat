@@ -11,6 +11,7 @@ define([
             this.setupElements();
             this.attachEventHandlers();
             this.ticketId = null;
+            this.statusGroup.find('.status.first').trigger('click');
             this.displayWelcomeMessage();
             this.ticketControllerUrl = config.ticketControllerUrl;
             this.messageControllerUrl = config.messageControllerUrl;
@@ -22,6 +23,8 @@ define([
             this.maxFilesToUpload = config.maxFilesToUpload;
             this.adminAvatarImage = config.adminAvatarImage;
             this.activeTicketStatus = null;
+            this.isLatestMessageFromUser = null;
+            this.currentTicketStatusId = null;
         },
 
         setupElements: function () {
@@ -39,13 +42,30 @@ define([
             this.loadingDivUserList = $('#ticket-admin-container .user-list-wrapper .loading-container');
             this.statusGroup = $('#ticket-admin-container .ticket-status-grouped');
             this.chatsInfo = $('#ticket-admin-container .chats-info');
+            this.refreshButton = $('.refresh-button button');
         },
 
         attachEventHandlers: function () {
             var self = this;
 
             this.userList.on('click', '.user-item', $.proxy(this.handleUserItemClick, this));
-            $('.chat-input button').on('click', $.proxy(this.handleSendMessage, this));
+            $('.chat-input button').on('click', async function () {
+                let isLatestFromUser = await self.getIsLatestMessageFromUser();
+                if (isLatestFromUser) {
+                    self.chatTextarea.attr('disabled', true);
+                    self.fileInput.attr('disabled', true);
+                    $('.chat-input button').addClass('disabled');
+                    $('.chat-input button').text('Sending...');
+                    self.handleSendMessage(function () {
+                        self.chatTextarea.attr('disabled', false);
+                        self.fileInput.attr('disabled', false);
+                        $('.chat-input button').removeClass('disabled');
+                        $('.chat-input button').text('Send');
+                    });
+                } else {
+                    self.handleSendMessage();
+                }
+            });
 
             this.chatTextarea.on('keydown', function (event) {
                 if (event.key === 'Enter') {
@@ -81,6 +101,35 @@ define([
             this.statusGroup.find('.status').on('click', function (event) {
                 self.loadTicketsByStatus(event);
             });
+
+            this.refreshButton.on('click', function() {
+                self.loadingDivChatArea.css('display', 'flex');
+                let ticketId = parseInt(self.refreshButton.attr('data-ticket-id'));
+                let oldStatusId = parseInt(self.currentTicketStatusId);
+                self.fetchChatHeaderData(ticketId, function () {
+                    if (oldStatusId != self.currentTicketStatusId) {
+                        self.statusGroup.find('[data-status-id="' + self.currentTicketStatusId + '"]').trigger('click');
+                    }
+                });
+                self.loadMessages(function () {
+                    self.loadingDivChatArea.hide();
+                });
+            });
+        },
+        getIsLatestMessageFromUser: async function () {
+            let self = this;
+            let response;
+            response = await $.ajax({
+                url: self.messageControllerUrl,
+                type: 'POST',
+                dataType: 'JSON',
+                data: { 
+                    ticket_id: self.ticketId,
+                    latest_user: true
+                },
+            });
+
+            return response.isLatestMessageFromUser;
         },
         handleUserItemClick: async function (event) {
             var self = this;
@@ -92,6 +141,7 @@ define([
             ticketItem.addClass('selected');
             ticketItem.find('.latest-message').addClass('opened');
             this.ticketId = parseInt(ticketItem.attr('data-ticket-id'));
+            this.refreshButton.attr('data-ticket-id', this.ticketId);
             this.fetchChatHeaderData(this.ticketId);
             this.loadMessages(function () {
                 self.loadingDivChatArea.hide();
@@ -152,7 +202,8 @@ define([
                     lastMessageStatus.find('span').text('Sent');
                     lastMessageStatus.addClass('from-admin');
                 } else {
-                    lastMessageStatus.find('span').text(element.latestMessage.latest_message);
+                    let latestMessageToShow = element.latestMessage.latest_message.replace(/<br>/g, ' ');
+                    lastMessageStatus.find('span').text(latestMessageToShow);
                     lastMessageStatus.addClass('from-customer');
                 }
                 if (parseInt(element.ticketId) == self.ticketId) {
@@ -168,7 +219,7 @@ define([
                 callback();
             }
         },
-        fetchChatHeaderData: function (ticketId) {
+        fetchChatHeaderData: function (ticketId, callback) {
             var self = this;
 
             $.ajax({
@@ -180,6 +231,9 @@ define([
                 },
                 success: function (response) {
                     self.updateChatHeader(response);
+                    if (callback && typeof callback === 'function') {
+                        callback();
+                    }
                 },
                 error: function (xhr, status, error) {
                     console.log(error);
@@ -206,7 +260,7 @@ define([
                         self.statusModal.hide();
                         self.fetchChatHeaderData(self.ticketId);
                         self.loadMessages();
-                        self.displayTicketsByStatus(self.activeTicketStatus);
+                        self.statusGroup.find('[data-status-id="' + statusValue + '"]').trigger('click');
                     },
                     error: function (xhr, status, error) {
                         console.log(error);
@@ -229,6 +283,7 @@ define([
             customerNameElement.text(data.customerName);
             statusElement.find("option").prop('selected', false); 
             statusElement.find("[value='" + data.statusId + "']").prop('selected', true);
+            this.currentTicketStatusId = data.statusId;
             statusElement.removeAttr('class');
             if (data.isOrder) {
                 orderLinkElement.find('.order-link-wrapper').show();
@@ -259,7 +314,7 @@ define([
                 }
             }
         },
-        handleSendMessage: async function (event) {
+        handleSendMessage: async function (callback) {
             this.clearErrorMessage();
             let messageText = this.chatTextarea.val().trim();
             let files = this.fileInput[0].files;
@@ -299,6 +354,9 @@ define([
                     self.fileInput.val('');
                     self.uploadedFiles.text('');
                     self.updateTicketImage();
+                    if (callback && typeof callback === 'function') {
+                        callback();
+                    }
                 },
                 error: function (xhr, status, error) {
                     console.log(error);
@@ -437,7 +495,7 @@ define([
         displayMessages: function (data) {
             var self = this;
             data.forEach(element => {
-                if (!element.sender) {
+                if (element.isAlert && parseInt(element.isAlert)) {
                     let alertmessage = $('<div class="alert-message info"></div>');
                     alertmessage.text(element.alertMessage);
                     self.chatMessages.append(alertmessage);
@@ -456,7 +514,7 @@ define([
                     }
                     if (element.message) {
                         let messageDiv = $('<div class="chat-message"></div>');
-                        messageDiv.text(element.message);
+                        messageDiv.html(element.message);
                         messageTemplate.find('.detailed-info').append(messageDiv);
                     }
                     if (element.files) {

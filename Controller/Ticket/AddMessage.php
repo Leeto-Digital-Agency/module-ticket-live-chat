@@ -84,7 +84,7 @@ class AddMessage extends Action
         $ticketModel = $this->ticketFactory->create()->load($ticketId);
         $filesData = $this->getRequest()->getParam('files_data');
         $filesData = json_decode($filesData);
-        
+
         foreach ($filesData as &$fileData) {
             $fileData[0] = base64_decode($fileData[0]);
         }
@@ -116,6 +116,6 @@ class AddMessage extends Action
             return $result->setData(['error' => $e->getMessage()]);
         }
 
-            return $result->setData($data);
+        return $result->setData($data);
     }
 }

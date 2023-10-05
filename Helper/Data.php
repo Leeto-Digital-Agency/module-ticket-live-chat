@@ -2,7 +2,7 @@
 
 namespace Leeto\TicketLiveChat\Helper;
 
-use Magento\Customer\Model\Session;
+use Magento\Customer\Model\SessionFactory;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Catalog\Helper\Image;
@@ -28,7 +28,7 @@ class Data extends AbstractHelper
     public const XML_PATH_SUPPORT_AVATAR_IMAGE = 'live_chat/settings/support_avatar_image';
 
     /**
-     * @var Session
+     * @var SessionFactory
      */
     protected $customerSession;
 
@@ -54,7 +54,7 @@ class Data extends AbstractHelper
     
    /**
     * @param Context                     $context
-    * @param Session                     $customerSession
+    * @param SessionFactory              $customerSession
     * @param Image                       $imageHelper
     * @param CustomerRepositoryInterface $customerRepositoryInterface
     * @param Url                         $backendUrlManager
@@ -62,7 +62,7 @@ class Data extends AbstractHelper
     */
     public function __construct(
         Context                     $context,
-        Session                     $customerSession,
+        SessionFactory              $customerSession,
         Image                       $imageHelper,
         CustomerRepositoryInterface $customerRepositoryInterface,
         Url                         $backendUrlManager,
@@ -81,7 +81,7 @@ class Data extends AbstractHelper
      */
     public function isLoggedIn()
     {
-        return $this->customerSession->isLoggedIn();
+        return $this->customerSession->create()->isLoggedIn();
     }
     
     /**
@@ -90,7 +90,7 @@ class Data extends AbstractHelper
     public function getLoggedInUser()
     {
         if ($this->isLoggedIn()) {
-            return $this->customerSession->getCustomer();
+            return $this->customerSession->create()->getCustomer();
         }
         
         return null;

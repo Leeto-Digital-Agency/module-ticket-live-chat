@@ -264,6 +264,10 @@
     display: flex;
     align-items: center;
 }
+#ticket-admin-container .refresh-button {
+    display: flex;
+    align-items: end;
+}
 #ticket-admin-container .chat-area .chat-input textarea {
     height: 80px;
     max-height:  150px;
@@ -274,6 +278,8 @@
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
+    opacity: 1!important;
+    color: black!important;
 }
 #ticket-admin-container .chat-area .chat-input button {
     padding: 10px 20px;
