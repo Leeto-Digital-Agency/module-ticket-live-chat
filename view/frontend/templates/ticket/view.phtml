@@ -62,7 +62,8 @@
                             <div class="from"><?= $escaper->escapeHtml(__("From:" . $from)) ?></div>
                             <div class="to"><?= $escaper->escapeHtml(__("To:" . $to)) ?></div>
                             <?php if ($message['message']): ?>
-                                <div class="message"><?= $escaper->escapeHtml($message['message']) ?></div>
+                                <?php $userMessage = str_replace('<br>', "\n", $message['message']) ?>
+                                <div class="message"><?= nl2br($escaper->escapeHtml($userMessage)) ?></div>
                             <?php endif; ?>
                             <?php if ($message['files']): ?>
                                 <div class="files">

@@ -18,6 +18,7 @@ use Magento\Framework\UrlInterface;
 use Leeto\TicketLiveChat\Model\ChatMessageAttachmentFactory;
 use Leeto\TicketLiveChat\Model\ResourceModel\ChatMessageAttachment\CollectionFactory as ChatMessageAttachmentCollection;
 use Magento\Catalog\Helper\Image;
+use Leeto\TicketLiveChat\Helper\Data;
 
 class TicketMessageHelper extends AbstractHelper
 {
@@ -100,6 +101,11 @@ class TicketMessageHelper extends AbstractHelper
     protected $ticketDataHelper;
 
     /**
+     * @var Data
+     */
+    protected $dataHelper;
+
+    /**
      * Construct
      *
      * @param TicketFactory                            $ticketFactory
@@ -117,6 +123,7 @@ class TicketMessageHelper extends AbstractHelper
      * @param ChatMessageAttachmentCollection          $chatMessageAttachmentCollection
      * @param Image                                    $image
      * @param TicketDataHelper                         $ticketDataHelper
+     * @param Data                                     $dataHelper
      */
     public function __construct(
         TicketFactory                          $ticketFactory,
@@ -133,7 +140,8 @@ class TicketMessageHelper extends AbstractHelper
         ChatMessageAttachmentFactory           $chatMessageAttachmentFactory,
         ChatMessageAttachmentCollection        $chatMessageAttachmentCollection,
         Image                                  $image,
-        TicketDataHelper                       $ticketDataHelper
+        TicketDataHelper                       $ticketDataHelper,
+        Data                                   $dataHelper
     ) {
         $this->ticketFactory = $ticketFactory;
         $this->chatFactory = $chatFactory;
@@ -150,6 +158,7 @@ class TicketMessageHelper extends AbstractHelper
         $this->chatMessageAttachmentCollection = $chatMessageAttachmentCollection;
         $this->ticketDataHelper = $ticketDataHelper;
         $this->image = $image;
+        $this->dataHelper = $dataHelper;
     }
 
     /**
@@ -169,6 +178,7 @@ class TicketMessageHelper extends AbstractHelper
         )->setOrder('message_id', 'ASC')
         ->getItems();
         $data = [];
+
         foreach ($messages as $message) {
             $messageData = [];
             $collection = $this->chatMessageAttachmentCollection->create();
@@ -177,7 +187,7 @@ class TicketMessageHelper extends AbstractHelper
                 $message->getId()
             )->getItems();
             if ($message->getIsAlert()) {
-                $messageData['sender'] = null;
+                $messageData['isAlert'] = $message->getIsAlert();
                 $messageData['alertMessage'] = $message->getMessage() ? $message->getMessage() : '';
                 $data[] = $messageData;
                 continue;
@@ -189,7 +199,11 @@ class TicketMessageHelper extends AbstractHelper
             $messageData['files'] = $this->getMessageAttachments($records);
             $messageData['message'] = $message->getMessage() ? $message->getMessage() : '';
             $messageData['imageSrc'] = $imageSrc;
-            $messageData['userEmail'] = $chat->getEmail();
+            $userEmail = $chat->getEmail();
+            if ($chat->getCustomerId() && !$userEmail) {
+                $userEmail = $this->dataHelper->getCustomerById($chat->getCustomerId())->getEmail();
+            }
+            $messageData['userEmail'] = $userEmail;
             $messageData['subject'] = $ticket->getSubject();
             $data[] = $messageData;
         }

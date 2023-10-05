@@ -60,9 +60,21 @@ define([
                     self.resourceId = data.resourceId;
                     return;
                 }
-                if (data.notifyAdminsUserClick){
-                    let userItem = $(`.user-item[data-chat-id="${data.chatId}"]`);
-                    userItem.trigger('click');
+                if (data.notifyAdmins){
+                    if (data.eventType == 'userClick') {
+                        // if (data.chatId != self.selectedChatId) {
+                            let userItem = $(`.user-item[data-chat-id="${data.chatId}"]`);
+                            userItem.trigger('click');
+                        // }
+                    }
+                    if (data.eventType == 'userConverted') {
+                        self.users = self.users.filter(user => user.id != data.chatId);
+                        let user = this.users.find(user => user.id == data.chatId);
+                        self.removeUser(user);
+                        self.totalChats.text(self.users.length);
+                        self.selectedChatId = null;
+                        self.displayWelcomeMessage();
+                    }
                     return;
                 }
                 if (data.typeEvent) {
@@ -179,7 +191,7 @@ define([
             if (user) {
                 self.updateUser(user, data);
                 if (chatId == self.selectedChatId) {
-                    self.notifyAdminsUserClick();
+                    self.notifyAdmins('userClick');
                     let message = self.getLatestMessage(); 
                     self.appendMessage(message)
                     self.updateUnreadMessages();
@@ -202,7 +214,7 @@ define([
             self.chatArea.show();
             userItem.addClass('selected');
             self.selectedChatId = parseInt(userItem.attr('data-chat-id'));
-            self.notifyAdminsUserClick();
+            self.notifyAdmins('userClick');
             self.displayMessages();
             self.updateUnreadMessages();
             self.updateChatHeader(function() {
@@ -229,6 +241,7 @@ define([
                     success: function (response) {
                         self.notifyUserForClosedChat(response.ticketUrl);
                         self.statusModal.hide();
+                        self.notifyAdmins('userConverted');
                         self.users = self.users.filter(user => user.id != self.selectedChatId);
                         self.removeUser();
                         self.totalChats.text(self.users.length);
@@ -489,7 +502,7 @@ define([
                 email: null,
                 message: null,
                 chatId: this.selectedChatId,
-                resourceId: self.resourceId,
+                resourceId: this.resourceId,
                 type: "file",
                 attachment: {
                     name: file.name,
@@ -829,12 +842,13 @@ define([
         hideTypingMessage: function () {
             $("#chat-admin-container .typing-event").remove();
         },
-        notifyAdminsUserClick: function() {
+        notifyAdmins: function(eventType) {
             this.conn.send(JSON.stringify({
-                notifyAdminsUserClick: true,
+                notifyAdmins: true,
+                eventType: eventType,
                 chatId: this.selectedChatId,
                 resourceId: this.resourceId
             }));
-        }
+        },
     });
 });

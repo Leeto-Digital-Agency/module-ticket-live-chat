@@ -181,6 +181,8 @@
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
+    opacity: 1!important;
+    color: black!important;
 }
 #ticket-user-container .chat-area .chat-input button {
     padding: 10px 20px;
