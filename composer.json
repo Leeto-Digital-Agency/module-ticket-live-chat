@@ -1,12 +1,30 @@
 {
     "name": "leeto/module-ticketlivechat",
-    "description": "Leeto",
+    "description": "Leeto Digital Agency - Ticket LiveChat Module for Magento 2",
     "type": "magento2-module",
-    "license": "GPL-3.0",
+    "license": "proprietary",
+    "version": "1.0.0",
     "authors": [
         {
-            "name": "Leeto"
+            "name": "Leeto Digital Agency",
+            "email": "contact@leetodigitalagency.com",
+            "homepage": "https://leetodigitalagency.com"
         }
+    ],
+    "keywords": [
+        "magento",
+        "module",
+        "ticket",
+        "livechat",
+        "leeto",
+        "digital",
+        "agency",
+        "leeto digital agency",
+        "leeto ticket livechat",
+        "magento 2 ticket",
+        "magento 2 livechat",
+        "magento 2 ticket livechat",
+        "magento 2 leeto ticket livechat"
     ],
     "minimum-stability": "dev",
     "require": {},
