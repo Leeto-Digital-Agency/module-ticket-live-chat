@@ -27,7 +27,9 @@
         "magento 2 leeto ticket livechat"
     ],
     "minimum-stability": "dev",
-    "require": {},
+    "require": {
+        "cboden/ratchet": "dev-master"
+    },
     "autoload": {
         "files": [
             "registration.php"
